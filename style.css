@@ -86,50 +86,24 @@ body {
   color: var(--accent);
 }
 
-.header-center {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-}
-
-.network-badge {
-  display: inline-flex;
+.header-nav {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  background: var(--green-dim);
-  border: 1px solid rgba(74, 222, 128, 0.2);
-  border-radius: 100px;
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--green);
-  letter-spacing: 0.02em;
+  gap: 4px;
 }
 
-.network-badge.disconnected {
-  background: var(--red-dim);
-  border-color: rgba(248, 113, 113, 0.2);
-  color: var(--red);
+.nav-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.15s ease;
 }
 
-.network-badge.wrong-network {
-  background: var(--yellow-dim);
-  border-color: rgba(250, 204, 21, 0.2);
-  color: var(--yellow);
-}
-
-.network-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: currentColor;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.04); }
+.nav-link.active { color: var(--accent); background: var(--accent-dim); }
 
 .header-right {
   display: flex;
