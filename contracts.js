@@ -20,8 +20,7 @@ const FACTORY_ABI = [
 ];
 
 const SOVEREIGN_NFT_ABI = [
-  "function mintTo(address _to, string _uri) external returns (uint256)",
-  "function mint(string _uri) external returns (uint256)",
+  "function mintTo(string _uri, address _receiver, address _royaltyReceiver) external returns (uint256)",
   "function setApprovalForAll(address operator, bool approved) external",
   "function isApprovedForAll(address owner, address operator) external view returns (bool)",
   "function ownerOf(uint256 tokenId) external view returns (address)",

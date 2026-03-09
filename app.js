@@ -507,13 +507,7 @@ async function mintToken(args) {
   var spin = createSpinner("Minting NFT to " + shortAddr(contract) + "...");
   var nft = new ethers.Contract(contract, SOVEREIGN_NFT_ABI, signer);
 
-  // Try mintTo first, fall back to mint
-  var tx;
-  try {
-    tx = await nft.mintTo(userAddress, uri);
-  } catch (_e) {
-    tx = await nft.mint(uri);
-  }
+  var tx = await nft.mintTo(uri, userAddress, userAddress);
 
   spin.stop("⏳ Transaction sent. Waiting for confirmation...", "line-info");
   var receipt = await tx.wait();
