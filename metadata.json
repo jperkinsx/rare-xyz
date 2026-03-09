@@ -1,6 +1,10 @@
 {
-  "name": "Genesis",
-  "description": "First mint on Rare Protocol — Sepolia testnet",
+  "name": "Pompadour shrub",
+  "created_by": "criptocromo",
+  "description": "Pompadour shrub by criptocromo — minted on Rare Protocol",
   "image": "ipfs://QmaTLNwJnggwfVQBP4Z1CgXG3XhgfJypcB9FDi6JqeiSNc",
-  "external_url": "https://jperkinsx.github.io/rare-xyz/"
+  "external_url": "https://jperkinsx.github.io/rare-xyz/",
+  "attributes": [
+    { "trait_type": "Artist", "value": "criptocromo" }
+  ]
 }
