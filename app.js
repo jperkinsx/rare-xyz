@@ -226,13 +226,19 @@ async function connectWallet() {
 
 function updateWalletUI(connected) {
   if (connected) {
-    walletBtn.textContent = shortAddr(userAddress);
-    walletBtn.classList.add("connected");
-    networkBadge.className = "network-badge";
-    networkBadge.innerHTML = '<span class="network-dot"></span> Sepolia Testnet';
+    if (walletBtn) {
+      walletBtn.textContent = shortAddr(userAddress);
+      walletBtn.classList.add("connected");
+    }
+    if (networkBadge) {
+      networkBadge.className = "network-badge";
+      networkBadge.innerHTML = '<span class="network-dot"></span> Sepolia Testnet';
+    }
   } else {
-    walletBtn.textContent = "Connect Wallet";
-    walletBtn.classList.remove("connected");
+    if (walletBtn) {
+      walletBtn.textContent = "Connect Wallet";
+      walletBtn.classList.remove("connected");
+    }
   }
 }
 
@@ -350,7 +356,13 @@ function parseArgs(raw) {
 function getFlag(args, flag) {
   var idx = args.indexOf(flag);
   if (idx === -1) return null;
-  return args[idx + 1] || null;
+  // Collect all tokens until the next --flag as a single value
+  var parts = [];
+  for (var i = idx + 1; i < args.length; i++) {
+    if (args[i].startsWith("--")) break;
+    parts.push(args[i]);
+  }
+  return parts.join(" ") || null;
 }
 
 function hasFlag(args, flag) {
