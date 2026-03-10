@@ -696,7 +696,7 @@ a:hover { text-decoration: underline; }
    resolveIPFS, shortAddr, formatTimeAgo, formatEth, ACTIVITY_LABELS, ETHERSCAN_BASE */
 
 // ── State ──
-var allEvents = [];          // Merged: indexer + live
+var allEvents = [];          // All events (on-chain + live)
 var liveEvents = [];         // Real-time captured events
 var activeFilter = "all";
 var liveAuctions = [];
@@ -704,11 +704,22 @@ var lastPolledBlock = 0;
 var pollInterval = null;
 var auctionTimerInterval = null;
 var liveEventCount = 0;
+var rpcProvider = null;
 
-// Sepolia RPC (public, for read-only polling)
-var SEPOLIA_RPC = "https://rpc.sepolia.org";
+// Multiple RPCs for fallback
+var RPC_ENDPOINTS = [
+  "https://ethereum-sepolia-rpc.publicnode.com",
+  "https://rpc.sepolia.org",
+  "https://rpc2.sepolia.org",
+  "https://sepolia.gateway.tenderly.co"
+];
 var ETHERSCAN = ETHERSCAN_BASE || "https://sepolia.etherscan.io";
-var DEPLOYMENT_BLOCK = 10416876;
+var DEPLOYMENT_BLOCK = 10416870;
+
+// Known NFT collections to also watch for Transfer events
+var KNOWN_COLLECTIONS = [
+  "0x9F4d8f1DA78d284Bb1ca645a8696911B362a0aDC" // Humanzero
+];
 
 // ── Filter mapping ──
 var FILTER_MAP = {
@@ -717,12 +728,13 @@ var FILTER_MAP = {
   sale: ["SALE"],
   listing: ["LIST", "DELIST"],
   offer: ["OFFER_PLACED", "OFFER_ACCEPTED", "OFFER_CANCELLED"],
-  mint: ["MINT"],
+  mint: ["MINT", "TRANSFER"],
   collection: ["CONTRACT_CREATED", "APP_REGISTERED"]
 };
 
-// ── Bazaar event signatures for eth_getLogs ──
+// ── Event signatures for eth_getLogs ──
 var EVENT_TOPICS = {
+  // Bazaar
   Sold:            ethers.id("Sold(address,address,address,address,uint256,uint256,address,uint256,uint256)"),
   SetSalePrice:    ethers.id("SetSalePrice(address,address,address,uint256,uint256,address,uint16)"),
   OfferPlaced:     ethers.id("OfferPlaced(address,address,uint256,address,uint256,bool)"),
@@ -732,10 +744,15 @@ var EVENT_TOPICS = {
   AuctionBid:      ethers.id("AuctionBid(address,address,uint256,address,uint256,bool,uint256,address)"),
   AuctionSettled:  ethers.id("AuctionSettled(address,address,address,uint256,address,uint256,address,uint256,uint256)"),
   CancelAuction:   ethers.id("CancelAuction(address,uint256,address)"),
-  Mint:            ethers.id("Mint(address,address,address,uint256,string)"),
+  // Factory
   ContractCreated: ethers.id("ContractCreated(address,address,string,string)"),
-  AppRegistered:   ethers.id("AppRegistered(address,uint16)")
+  // Registry
+  AppRegistered:   ethers.id("AppRegistered(address,uint16)"),
+  // ERC-721 Transfer (for mint detection from NFT contracts)
+  Transfer:        ethers.id("Transfer(address,address,uint256)")
 };
+
+var ZERO_ADDR_TOPIC = "0x0000000000000000000000000000000000000000000000000000000000000000";
 
 // Reverse lookup from topic to event name
 var TOPIC_TO_EVENT = {};
@@ -754,9 +771,9 @@ var EVENT_TO_ACTIVITY = {
   AuctionBid: "AUCTION_BID",
   AuctionSettled: "AUCTION_SETTLED",
   CancelAuction: "AUCTION_CANCELLED",
-  Mint: "MINT",
   ContractCreated: "CONTRACT_CREATED",
-  AppRegistered: "APP_REGISTERED"
+  AppRegistered: "APP_REGISTERED",
+  Transfer: "MINT"  // We only track Transfer from zero address (mints)
 };
 
 // Extend ACTIVITY_LABELS for types not in indexer.js
@@ -766,194 +783,279 @@ if (!ACTIVITY_LABELS.CONTRACT_CREATED) {
 if (!ACTIVITY_LABELS.APP_REGISTERED) {
   ACTIVITY_LABELS.APP_REGISTERED = { label: "App registered", color: "var(--yellow)" };
 }
+if (!ACTIVITY_LABELS.TRANSFER) {
+  ACTIVITY_LABELS.TRANSFER = { label: "Transfer", color: "var(--text-muted)" };
+}
 
 // ── Init ──
 
 (async function init() {
-  await Promise.all([
-    loadIndexerData(),
-    loadLiveAuctions(),
-    loadStats()
-  ]);
+  setupFilters();
+  await initRpcProvider();
+  await loadHistoricalOnchain();
   startLivePolling();
   startAuctionTimers();
-  setupFilters();
 })();
 
-// ── Load Historical Data from Indexer ──
+// ── RPC Provider with fallback ──
 
-async function loadIndexerData() {
-  try {
-    var activities = await indexerGetActivity({ limit: 200 });
-    allEvents = activities.map(function(a) {
-      return {
-        id: a.id,
-        type: a.activityType,
-        tokenId: a.token_id || "",
-        from: a.from || "",
-        to: a.to || "",
-        amount: a.amount || "",
-        currency: a.currencyAddress || "",
-        timestamp: Number(a.timestamp),
-        txHash: a.txHash || "",
-        isLive: false,
-        source: "indexer"
-      };
-    });
-    renderFeed();
-  } catch (e) {
-    console.error("Indexer load failed:", e);
+async function initRpcProvider() {
+  for (var i = 0; i < RPC_ENDPOINTS.length; i++) {
+    try {
+      var p = new ethers.JsonRpcProvider(RPC_ENDPOINTS[i]);
+      var bn = await p.getBlockNumber();
+      if (bn > 0) {
+        rpcProvider = p;
+        console.log("Connected to RPC:", RPC_ENDPOINTS[i], "block:", bn);
+        return;
+      }
+    } catch (e) {
+      console.warn("RPC failed:", RPC_ENDPOINTS[i], e.message);
+    }
+  }
+  console.error("All RPCs failed");
+}
+
+// ── Load Historical On-chain Events ──
+
+async function loadHistoricalOnchain() {
+  if (!rpcProvider) {
     document.getElementById("feedList").innerHTML =
-      '<div class="empty-state"><div class="icon">&#9888;</div><p>Could not load from indexer</p>' +
-      '<p class="hint">' + escapeHtml(e.message) + '</p></div>';
+      '<div class="empty-state"><div class="icon">&#9888;</div><p>Could not connect to Sepolia RPC</p></div>';
+    return;
   }
-}
 
-// ── Load Live Auctions ──
+  var dot = document.getElementById("statusDot");
+  var text = document.getElementById("statusText");
+  dot.className = "status-dot syncing";
+  text.textContent = "Scanning chain...";
 
-async function loadLiveAuctions() {
   try {
-    var auctions = await indexerGetAuctions({ limit: 20 });
-    liveAuctions = auctions.filter(function(a) { return a.isLive; });
-    renderAuctionBanner();
-  } catch (e) {
-    console.warn("Could not load auctions:", e);
-  }
-}
+    var currentBlock = await rpcProvider.getBlockNumber();
+    lastPolledBlock = currentBlock;
 
-// ── Load Stats ──
+    // Scan in chunks to avoid RPC limits (max ~5000 blocks per request)
+    var fromBlock = DEPLOYMENT_BLOCK;
+    var chunkSize = 5000;
+    var allLogs = [];
 
-async function loadStats() {
-  try {
-    var stats = await indexerGetStats();
-    var dot = document.getElementById("statusDot");
-    var text = document.getElementById("statusText");
+    while (fromBlock <= currentBlock) {
+      var toBlock = Math.min(fromBlock + chunkSize - 1, currentBlock);
+      text.textContent = "Scanning blocks " + fromBlock.toLocaleString() + " — " + toBlock.toLocaleString() + "...";
 
-    if (stats.indexer && stats.indexer.latest_processed_block > 0) {
-      dot.className = "status-dot";
-      text.textContent = "Block " + stats.indexer.latest_processed_block.toLocaleString();
-      document.getElementById("statBlock").textContent = stats.indexer.latest_processed_block.toLocaleString();
-      document.getElementById("statEvents").textContent = (stats.indexer.num_events_processed || 0).toLocaleString();
-    } else {
-      dot.className = "status-dot syncing";
-      text.textContent = "Syncing...";
-      document.getElementById("statBlock").textContent = "syncing";
-      document.getElementById("statEvents").textContent = "—";
+      // Get all relevant topics for the Bazaar
+      var bazaarTopics = [
+        EVENT_TOPICS.Sold, EVENT_TOPICS.SetSalePrice,
+        EVENT_TOPICS.OfferPlaced, EVENT_TOPICS.AcceptOffer, EVENT_TOPICS.CancelOffer,
+        EVENT_TOPICS.NewAuction, EVENT_TOPICS.AuctionBid,
+        EVENT_TOPICS.AuctionSettled, EVENT_TOPICS.CancelAuction
+      ];
+
+      // Fetch logs in parallel for each contract
+      var promises = [
+        rpcProvider.getLogs({
+          address: CONTRACTS.bazaar,
+          fromBlock: fromBlock,
+          toBlock: toBlock,
+          topics: [bazaarTopics]
+        }).catch(function() { return []; }),
+        rpcProvider.getLogs({
+          address: CONTRACTS.factory,
+          fromBlock: fromBlock,
+          toBlock: toBlock,
+          topics: [[EVENT_TOPICS.ContractCreated]]
+        }).catch(function() { return []; }),
+        rpcProvider.getLogs({
+          address: CONTRACTS.appRegistry,
+          fromBlock: fromBlock,
+          toBlock: toBlock,
+          topics: [[EVENT_TOPICS.AppRegistered]]
+        }).catch(function() { return []; })
+      ];
+
+      // Also check known NFT collections for mint Transfer events (from zero address)
+      for (var c = 0; c < KNOWN_COLLECTIONS.length; c++) {
+        promises.push(
+          rpcProvider.getLogs({
+            address: KNOWN_COLLECTIONS[c],
+            fromBlock: fromBlock,
+            toBlock: toBlock,
+            topics: [[EVENT_TOPICS.Transfer], [ZERO_ADDR_TOPIC]]
+          }).catch(function() { return []; })
+        );
+      }
+
+      var results = await Promise.all(promises);
+      for (var r = 0; r < results.length; r++) {
+        allLogs = allLogs.concat(results[r]);
+      }
+
+      fromBlock = toBlock + 1;
     }
 
-    var collections = await indexerGetCollections(1000);
-    document.getElementById("statCollections").textContent = collections.length;
+    // Batch fetch block timestamps
+    var blockTimestamps = {};
+    var uniqueBlocks = [];
+    allLogs.forEach(function(log) {
+      if (!blockTimestamps[log.blockNumber]) {
+        blockTimestamps[log.blockNumber] = 0;
+        uniqueBlocks.push(log.blockNumber);
+      }
+    });
+
+    text.textContent = "Fetching timestamps for " + uniqueBlocks.length + " blocks...";
+
+    // Fetch timestamps in batches of 5
+    for (var bi = 0; bi < uniqueBlocks.length; bi += 5) {
+      var batch = uniqueBlocks.slice(bi, bi + 5);
+      var blockPromises = batch.map(function(bn) {
+        return rpcProvider.getBlock(bn).then(function(b) {
+          if (b) blockTimestamps[bn] = Number(b.timestamp);
+        }).catch(function() {});
+      });
+      await Promise.all(blockPromises);
+    }
+
+    // Parse all logs
+    var events = [];
+    for (var li = 0; li < allLogs.length; li++) {
+      var log = allLogs[li];
+      var parsed = parseLog(log);
+      if (!parsed) continue;
+
+      // For Transfer events, only keep mints (from zero address)
+      if (parsed.type === "MINT" && TOPIC_TO_EVENT[log.topics[0]] === "Transfer") {
+        // Store the NFT contract address and tokenId
+        parsed.tokenId = log.address;
+        if (log.topics[3]) {
+          var tokenIdBig = ethers.toBigInt(log.topics[3]);
+          parsed.tokenId = log.address + "-" + tokenIdBig.toString();
+        }
+        parsed.from = "";
+        parsed.to = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+      }
+
+      parsed.timestamp = blockTimestamps[log.blockNumber] || Math.floor(Date.now() / 1000);
+      parsed.isLive = false;
+      parsed.source = "chain";
+      events.push(parsed);
+    }
+
+    allEvents = events;
+
+    // Update stats
+    dot.className = "status-dot";
+    text.textContent = "Block " + currentBlock.toLocaleString() + " · On-chain";
+    document.getElementById("statBlock").textContent = currentBlock.toLocaleString();
+    document.getElementById("statEvents").textContent = allEvents.length;
+    document.getElementById("statAuctions").textContent = allEvents.filter(function(e) { return e.type === "AUCTION_CREATED"; }).length;
+
+    // Count unique collection addresses from ContractCreated events
+    var collections = allEvents.filter(function(e) { return e.type === "CONTRACT_CREATED"; });
+    document.getElementById("statCollections").textContent = collections.length || KNOWN_COLLECTIONS.length;
+
+    document.getElementById("liveBadge").style.display = "inline-flex";
+    renderFeed();
 
   } catch (e) {
-    document.getElementById("statusDot").className = "status-dot offline";
-    document.getElementById("statusText").textContent = "Offline";
+    console.error("On-chain load failed:", e);
+    dot.className = "status-dot offline";
+    text.textContent = "Error: " + e.message;
+    document.getElementById("feedList").innerHTML =
+      '<div class="empty-state"><div class="icon">&#9888;</div><p>Failed to load on-chain events</p>' +
+      '<p class="hint">' + escapeHtml(e.message) + '</p></div>';
   }
 }
 
 // ── Real-Time Event Polling ──
 
 async function startLivePolling() {
-  try {
-    var rpcProvider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
-    lastPolledBlock = await rpcProvider.getBlockNumber();
-    document.getElementById("liveBadge").style.display = "inline-flex";
+  if (!rpcProvider) return;
 
-    pollInterval = setInterval(async function() {
-      try {
-        var currentBlock = await rpcProvider.getBlockNumber();
-        if (currentBlock <= lastPolledBlock) return;
+  pollInterval = setInterval(async function() {
+    try {
+      var currentBlock = await rpcProvider.getBlockNumber();
+      if (currentBlock <= lastPolledBlock) return;
 
-        var fromBlock = lastPolledBlock + 1;
-        var toBlock = currentBlock;
-        lastPolledBlock = currentBlock;
+      var fromBlock = lastPolledBlock + 1;
+      var toBlock = currentBlock;
+      lastPolledBlock = currentBlock;
 
-        // Query logs from all monitored contracts
-        var allTopics = Object.values(EVENT_TOPICS);
+      // Bazaar events
+      var bazaarTopics = [
+        EVENT_TOPICS.Sold, EVENT_TOPICS.SetSalePrice,
+        EVENT_TOPICS.OfferPlaced, EVENT_TOPICS.AcceptOffer, EVENT_TOPICS.CancelOffer,
+        EVENT_TOPICS.NewAuction, EVENT_TOPICS.AuctionBid,
+        EVENT_TOPICS.AuctionSettled, EVENT_TOPICS.CancelAuction
+      ];
 
-        // Bazaar events
-        var bazaarLogs = await rpcProvider.getLogs({
-          address: CONTRACTS.bazaar,
-          fromBlock: fromBlock,
-          toBlock: toBlock,
-          topics: [allTopics.slice(0, 9)] // Bazaar event topics
-        });
+      var promises = [
+        rpcProvider.getLogs({ address: CONTRACTS.bazaar, fromBlock: fromBlock, toBlock: toBlock, topics: [bazaarTopics] }).catch(function() { return []; }),
+        rpcProvider.getLogs({ address: CONTRACTS.factory, fromBlock: fromBlock, toBlock: toBlock, topics: [[EVENT_TOPICS.ContractCreated]] }).catch(function() { return []; }),
+        rpcProvider.getLogs({ address: CONTRACTS.appRegistry, fromBlock: fromBlock, toBlock: toBlock, topics: [[EVENT_TOPICS.AppRegistered]] }).catch(function() { return []; })
+      ];
 
-        // Minter events (Mint)
-        var minterLogs = await rpcProvider.getLogs({
-          address: CONTRACTS.minter,
-          fromBlock: fromBlock,
-          toBlock: toBlock,
-          topics: [[EVENT_TOPICS.Mint]]
-        });
-
-        // Factory events (ContractCreated)
-        var factoryLogs = await rpcProvider.getLogs({
-          address: CONTRACTS.factory,
-          fromBlock: fromBlock,
-          toBlock: toBlock,
-          topics: [[EVENT_TOPICS.ContractCreated]]
-        });
-
-        // Registry events (AppRegistered)
-        var registryLogs = await rpcProvider.getLogs({
-          address: CONTRACTS.appRegistry,
-          fromBlock: fromBlock,
-          toBlock: toBlock,
-          topics: [[EVENT_TOPICS.AppRegistered]]
-        });
-
-        var allLogs = bazaarLogs.concat(minterLogs, factoryLogs, registryLogs);
-
-        if (allLogs.length === 0) return;
-
-        // Process each log
-        for (var i = 0; i < allLogs.length; i++) {
-          var log = allLogs[i];
-          var parsed = parseLog(log);
-          if (!parsed) continue;
-
-          // Check for duplicate by txHash
-          var isDupe = allEvents.some(function(e) {
-            return e.txHash === parsed.txHash && e.type === parsed.type;
-          });
-          if (isDupe) continue;
-
-          // Get block timestamp
-          try {
-            var block = await rpcProvider.getBlock(log.blockNumber);
-            parsed.timestamp = block ? block.timestamp : Math.floor(Date.now() / 1000);
-          } catch (err) {
-            parsed.timestamp = Math.floor(Date.now() / 1000);
-          }
-
-          parsed.isLive = true;
-          parsed.source = "live";
-          liveEventCount++;
-
-          // Prepend to allEvents
-          allEvents.unshift(parsed);
-          liveEvents.push(parsed);
-
-          // If auction event, refresh live auctions
-          if (parsed.type.startsWith("AUCTION_")) {
-            loadLiveAuctions();
-          }
-        }
-
-        if (allLogs.length > 0) {
-          document.getElementById("statLiveEvents").textContent = liveEventCount;
-          renderFeed();
-        }
-
-      } catch (err) {
-        console.warn("Poll error:", err);
+      for (var c = 0; c < KNOWN_COLLECTIONS.length; c++) {
+        promises.push(
+          rpcProvider.getLogs({ address: KNOWN_COLLECTIONS[c], fromBlock: fromBlock, toBlock: toBlock, topics: [[EVENT_TOPICS.Transfer], [ZERO_ADDR_TOPIC]] }).catch(function() { return []; })
+        );
       }
-    }, 6000); // Poll every 6 seconds (~1 Sepolia block)
 
-  } catch (e) {
-    console.warn("Could not start live polling:", e);
-    document.getElementById("liveBadge").style.display = "none";
-  }
+      var results = await Promise.all(promises);
+      var newLogs = [];
+      for (var r = 0; r < results.length; r++) {
+        newLogs = newLogs.concat(results[r]);
+      }
+
+      if (newLogs.length === 0) return;
+
+      for (var i = 0; i < newLogs.length; i++) {
+        var log = newLogs[i];
+        var parsed = parseLog(log);
+        if (!parsed) continue;
+
+        // Handle Transfer mints
+        if (parsed.type === "MINT" && TOPIC_TO_EVENT[log.topics[0]] === "Transfer") {
+          parsed.tokenId = log.address;
+          if (log.topics[3]) {
+            parsed.tokenId = log.address + "-" + ethers.toBigInt(log.topics[3]).toString();
+          }
+          parsed.from = "";
+          parsed.to = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        }
+
+        // Dedup
+        var isDupe = allEvents.some(function(e) {
+          return e.txHash === parsed.txHash && e.type === parsed.type && e.id === parsed.id;
+        });
+        if (isDupe) continue;
+
+        // Get timestamp
+        try {
+          var block = await rpcProvider.getBlock(log.blockNumber);
+          parsed.timestamp = block ? Number(block.timestamp) : Math.floor(Date.now() / 1000);
+        } catch (err) {
+          parsed.timestamp = Math.floor(Date.now() / 1000);
+        }
+
+        parsed.isLive = true;
+        parsed.source = "live";
+        liveEventCount++;
+
+        allEvents.unshift(parsed);
+        liveEvents.push(parsed);
+      }
+
+      if (newLogs.length > 0) {
+        document.getElementById("statLiveEvents").textContent = liveEventCount;
+        document.getElementById("statEvents").textContent = allEvents.length;
+        document.getElementById("statBlock").textContent = currentBlock.toLocaleString();
+        renderFeed();
+      }
+    } catch (err) {
+      console.warn("Poll error:", err);
+    }
+  }, 8000); // Poll every 8 seconds
 }
 
 // ── Parse Raw Log into Event ──
