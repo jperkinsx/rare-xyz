@@ -299,7 +299,12 @@ async function handleCommand(raw) {
         if (sub === "token") return void (await queryToken(args));
         if (sub === "listing") return void (await queryListing(args));
         if (sub === "balance") return void (await queryBalance(args));
-        return printLine("Usage: query token | listing | balance", "line-warn");
+        if (sub === "activity") return void (await queryActivity(args));
+        if (sub === "collection") return void (await queryCollection(args));
+        return printLine("Usage: query token | listing | balance | activity | collection", "line-warn");
+      case "indexer":
+        if (sub === "status") return void (await indexerStatus());
+        return printLine("Usage: indexer status", "line-warn");
       case "apps":
         if (sub === "register") return void (await appsRegister(args));
         if (sub === "set-fee") return void (await appsSetFee(args));
@@ -385,9 +390,14 @@ function showHelp() {
       ["auction info --contract <a> --id <n>", "View auction details"],
     ]],
     ["Query", [
-      ["query token --contract <a> --id <n>", "Token owner & URI"],
+      ["query token --contract <a> --id <n>", "Token owner, URI & metadata (indexed)"],
       ["query listing --contract <a> --id <n>", "Current sale price"],
       ["query balance --contract <a>", "Your token balance"],
+      ["query activity", "Recent activity feed (from indexer)"],
+      ["query collection --contract <a>", "Collection info & tokens (from indexer)"],
+    ]],
+    ["Indexer", [
+      ["indexer status", "Check indexer sync status"],
     ]],
     ["Apps", [
       ["apps register --fee <bps>", "Register as marketplace app"],
@@ -891,11 +901,60 @@ async function queryToken(args) {
   }
 
   var spin = createSpinner("Querying token #" + tokenId + "...");
+
+  // Try indexer first, fall back to onchain
+  try {
+    var data = await indexerGetToken(contract, tokenId);
+    if (data && data.token) {
+      var t = data.token;
+      spin.stop("✓ Token info (indexed)", "line-success");
+      printTable([
+        ["Contract", shortAddr(contract), "purple"],
+        ["Token ID", String(t.tokenId), "accent"],
+        ["Owner", shortAddr(t.owner), "green"],
+        ["Creator", shortAddr(t.creator), "purple"],
+        ["URI", t.tokenURI || "—", "text"],
+      ]);
+      if (t.metadataName || t.metadataImage) {
+        printLine("");
+        printLine("  Metadata:", "line-info");
+        if (t.metadataName) printLine("    Name:  " + t.metadataName, "line-text");
+        if (t.metadataImage) printLine("    Image: " + t.metadataImage, "line-text");
+      }
+      if (data.listing) {
+        printLine("");
+        printLine("  Active Listing:", "line-info");
+        printLine("    Price:  " + formatEth(data.listing.price), "line-text");
+        printLine("    Seller: " + shortAddr(data.listing.seller), "line-text");
+      }
+      if (data.auction && data.auction.isLive) {
+        printLine("");
+        printLine("  Live Auction:", "line-info");
+        printLine("    Type:     " + (data.auction.auctionType || "—"), "line-text");
+        printLine("    High Bid: " + formatEth(data.auction.highestBid), "line-text");
+        printLine("    Bidder:   " + shortAddr(data.auction.highestBidder), "line-text");
+        printLine("    Time Left: " + data.auction.timeRemaining + "s", "line-text");
+      }
+      if (data.offers && data.offers.length > 0) {
+        printLine("");
+        printLine("  Active Offers: " + data.offers.length, "line-info");
+        data.offers.slice(0, 3).forEach(function(o) {
+          printLine("    " + formatEth(o.amount) + " from " + shortAddr(o.bidder), "line-text");
+        });
+      }
+      printLine("");
+      return;
+    }
+  } catch (e) {
+    // Indexer unavailable, fall back to onchain
+  }
+
+  // Fallback: direct contract read
   var nft = new ethers.Contract(contract, SOVEREIGN_NFT_ABI, provider);
   try {
     var owner = await nft.ownerOf(tokenId);
     var uri = await nft.tokenURI(tokenId);
-    spin.stop("✓ Token info", "line-success");
+    spin.stop("✓ Token info (onchain)", "line-success");
     printTable([
       ["Contract", shortAddr(contract), "purple"],
       ["Token ID", tokenId, "accent"],
@@ -1026,6 +1085,113 @@ async function appsInfo(args) {
     }
   } catch (err) {
     spin.stop("✗ Could not read app info", "line-error");
+  }
+  printLine("");
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// INDEXER-POWERED COMMANDS
+// ══════════════════════════════════════════════════════════════════════
+
+// ── QUERY ACTIVITY (from indexer) ──
+async function queryActivity(args) {
+  var spin = createSpinner("Fetching recent activity from indexer...");
+  try {
+    var limit = parseInt(getFlag(args, "--limit") || "15");
+    var typeFilter = getFlag(args, "--type");
+    var opts = { limit: limit };
+    if (typeFilter) opts.type = typeFilter.toUpperCase();
+    var activities = await indexerGetActivity(opts);
+
+    if (!activities || activities.length === 0) {
+      spin.stop("No activity found.", "line-warn");
+      printLine("");
+      return;
+    }
+
+    spin.stop("✓ Recent activity (" + activities.length + " events)", "line-success");
+    printLine("");
+    activities.forEach(function(a) {
+      var info = ACTIVITY_LABELS[a.activityType] || { label: a.activityType };
+      var line = "  " + info.label.padEnd(18) + " ";
+      line += (a.token_id || "").slice(0, 24).padEnd(26) + " ";
+      if (a.amount) line += formatEth(a.amount).padEnd(14);
+      else line += "".padEnd(14);
+      line += formatTimeAgo(a.timestamp);
+      printLine(line, "line-text");
+    });
+  } catch (e) {
+    spin.stop("✗ " + e.message, "line-error");
+  }
+  printLine("");
+}
+
+// ── QUERY COLLECTION (from indexer) ──
+async function queryCollection(args) {
+  var contract = getFlag(args, "--contract") || lastDeployedContract;
+  if (!contract) {
+    printLine("Error: Specify --contract.", "line-error");
+    return;
+  }
+
+  var spin = createSpinner("Fetching collection from indexer...");
+  try {
+    var data = await indexerGetCollection(contract);
+
+    if (!data || !data.collection) {
+      spin.stop("Collection not found in indexer.", "line-warn");
+      printLine("");
+      return;
+    }
+
+    var c = data.collection;
+    spin.stop("✓ Collection info (indexed)", "line-success");
+    printTable([
+      ["Name", c.name || "Unnamed", "text"],
+      ["Symbol", c.symbol || "—", "accent"],
+      ["Owner", shortAddr(c.owner), "purple"],
+      ["Tokens", String(c.tokenCount), "green"],
+      ["Address", shortAddr(c.id), "purple"],
+    ]);
+
+    if (data.tokens && data.tokens.length > 0) {
+      printLine("");
+      printLine("  Tokens:", "line-info");
+      data.tokens.forEach(function(t) {
+        var name = t.metadataName || ("Token #" + t.tokenId);
+        printLine("    #" + t.tokenId + "  " + name + "  (owner: " + shortAddr(t.owner) + ")", "line-text");
+      });
+    }
+  } catch (e) {
+    spin.stop("✗ " + e.message, "line-error");
+  }
+  printLine("");
+}
+
+// ── INDEXER STATUS ──
+async function indexerStatus() {
+  var spin = createSpinner("Checking indexer status...");
+  try {
+    var stats = await indexerGetStats();
+    var idx = stats.indexer;
+    if (idx) {
+      spin.stop("✓ Indexer status", "line-success");
+      printTable([
+        ["Chain", "Sepolia (" + idx.chain_id + ")", "accent"],
+        ["Latest Block", idx.latest_processed_block > 0 ? String(idx.latest_processed_block) : "syncing...", "green"],
+        ["Events Processed", String(idx.num_events_processed || 0), "green"],
+        ["Endpoint", INDEXER_ENDPOINT.replace("https://", "").slice(0, 45) + "...", "text"],
+      ]);
+    } else {
+      spin.stop("Indexer returned no metadata.", "line-warn");
+    }
+    if (stats.protocolConfig) {
+      printLine("");
+      printLine("  Protocol Config:", "line-info");
+      printLine("    Share: " + stats.protocolConfig.protocolShareBp + " bps (" + (stats.protocolConfig.protocolShareBp / 100).toFixed(1) + "%)", "line-text");
+    }
+  } catch (e) {
+    spin.stop("✗ " + e.message, "line-error");
   }
   printLine("");
 }
