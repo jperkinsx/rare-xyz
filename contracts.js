@@ -16,7 +16,7 @@ const ETHERSCAN_BASE = "https://sepolia.etherscan.io";
 
 const FACTORY_ABI = [
   "function createSovereignNFTContract(string _name, string _symbol) external returns (address)",
-  "event ContractCreated(address indexed _contractAddress, address indexed _owner, string _name, string _symbol)",
+  "event SovereignNFTContractCreated(address indexed _contractAddress, address indexed _owner)",
 ];
 
 const SOVEREIGN_NFT_ABI = [

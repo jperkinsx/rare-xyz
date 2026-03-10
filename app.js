@@ -470,12 +470,12 @@ async function mintDeploy(args) {
   spin.stop("⏳ Transaction sent. Waiting for confirmation...", "line-info");
   var receipt = await tx.wait();
 
-  // Find ContractCreated event
+  // Find SovereignNFTContractCreated event
   var contractAddr = null;
   for (var i = 0; i < receipt.logs.length; i++) {
     try {
       var parsed = factory.interface.parseLog({ topics: receipt.logs[i].topics, data: receipt.logs[i].data });
-      if (parsed && parsed.name === "ContractCreated") {
+      if (parsed && parsed.name === "SovereignNFTContractCreated") {
         contractAddr = parsed.args[0];
         break;
       }

@@ -745,7 +745,7 @@ var EVENT_TOPICS = {
   AuctionSettled:  ethers.id("AuctionSettled(address,address,address,uint256,address,uint256,address,uint256,uint256)"),
   CancelAuction:   ethers.id("CancelAuction(address,uint256,address)"),
   // Factory
-  ContractCreated: ethers.id("ContractCreated(address,address,string,string)"),
+  SovereignNFTContractCreated: ethers.id("SovereignNFTContractCreated(address,address)"),
   // Registry
   AppRegistered:   ethers.id("AppRegistered(address,uint16)"),
   // ERC-721 Transfer (for mint detection from NFT contracts)
@@ -771,7 +771,7 @@ var EVENT_TO_ACTIVITY = {
   AuctionBid: "AUCTION_BID",
   AuctionSettled: "AUCTION_SETTLED",
   CancelAuction: "AUCTION_CANCELLED",
-  ContractCreated: "CONTRACT_CREATED",
+  SovereignNFTContractCreated: "CONTRACT_CREATED",
   AppRegistered: "APP_REGISTERED",
   Transfer: "MINT"  // We only track Transfer from zero address (mints)
 };
@@ -863,7 +863,7 @@ async function loadHistoricalOnchain() {
           address: CONTRACTS.factory,
           fromBlock: fromBlock,
           toBlock: toBlock,
-          topics: [[EVENT_TOPICS.ContractCreated]]
+          topics: [[EVENT_TOPICS.SovereignNFTContractCreated]]
         }).catch(function() { return []; }),
         rpcProvider.getLogs({
           address: CONTRACTS.appRegistry,
@@ -991,7 +991,7 @@ async function startLivePolling() {
 
       var promises = [
         rpcProvider.getLogs({ address: CONTRACTS.bazaar, fromBlock: fromBlock, toBlock: toBlock, topics: [bazaarTopics] }).catch(function() { return []; }),
-        rpcProvider.getLogs({ address: CONTRACTS.factory, fromBlock: fromBlock, toBlock: toBlock, topics: [[EVENT_TOPICS.ContractCreated]] }).catch(function() { return []; }),
+        rpcProvider.getLogs({ address: CONTRACTS.factory, fromBlock: fromBlock, toBlock: toBlock, topics: [[EVENT_TOPICS.SovereignNFTContractCreated]] }).catch(function() { return []; }),
         rpcProvider.getLogs({ address: CONTRACTS.appRegistry, fromBlock: fromBlock, toBlock: toBlock, topics: [[EVENT_TOPICS.AppRegistered]] }).catch(function() { return []; })
       ];
 
@@ -1140,9 +1140,10 @@ function parseLog(log) {
         result.from = log.topics[3] ? ethers.getAddress("0x" + log.topics[3].slice(26)) : "";
         break;
 
-      case "ContractCreated":
-        result.from = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+      case "SovereignNFTContractCreated":
+        // topic1 = contract address, topic2 = owner
         result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) : "";
+        result.from = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
         break;
 
       case "AppRegistered":
