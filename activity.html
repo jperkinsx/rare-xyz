@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activity Feed — Rare Protocol</title>
+<meta name="description" content="Live activity feed for Rare Protocol on Sepolia. Real-time auction events, sales, listings, offers, mints, and more.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --bg: #08080a;
+  --bg-surface: #0f0f12;
+  --bg-card: #131316;
+  --bg-card-hover: #18181c;
+  --bg-header: rgba(8, 8, 10, 0.85);
+  --border: #1c1c21;
+  --border-hover: #28282e;
+  --text: #e4e4e7;
+  --text-muted: #71717a;
+  --text-dim: #52525b;
+  --accent: #22d3ee;
+  --accent-dim: rgba(34, 211, 238, 0.12);
+  --accent-glow: rgba(34, 211, 238, 0.08);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.1);
+  --red: #f87171;
+  --red-dim: rgba(248, 113, 113, 0.08);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167, 139, 250, 0.1);
+  --yellow: #facc15;
+  --yellow-dim: rgba(250, 204, 21, 0.08);
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --max-w: 1080px;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Header ── */
+.header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--bg-header);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo { color: var(--accent); }
+
+.logo-text {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.logo-accent { color: var(--accent); }
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.04); text-decoration: none; }
+.nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+.btn-primary {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 18px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary:hover { opacity: 0.9; text-decoration: none; }
+
+/* ── Main ── */
+.main {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 80px 28px 40px;
+}
+
+/* ── Feed Header ── */
+.feed-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28px 0 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.feed-title-area h1 {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 4px;
+}
+
+.feed-subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.feed-status {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 5px 12px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--border);
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  flex-shrink: 0;
+}
+
+.status-dot.offline { background: var(--red); }
+.status-dot.syncing { background: var(--yellow); animation: pulse 1.5s ease-in-out infinite; }
+
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 100px;
+  color: var(--green);
+  background: var(--green-dim);
+  border: 1px solid rgba(74, 222, 128, 0.15);
+}
+
+.live-pulse {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+/* ── Filters ── */
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.filter-btn {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.filter-btn:hover { color: var(--text); border-color: var(--border-hover); }
+.filter-btn.active { color: var(--accent); background: var(--accent-dim); border-color: rgba(34, 211, 238, 0.2); }
+
+/* ── Event Feed ── */
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.event-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 160px 110px 90px;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+}
+
+.event-row:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.event-row.is-live {
+  border-left: 2px solid var(--green);
+  animation: fadeInSlide 0.4s ease-out;
+}
+
+.event-row.is-auction {
+  border-left: 2px solid var(--purple);
+}
+
+.event-row.is-auction.is-live {
+  border-left: 2px solid var(--green);
+  background: rgba(74, 222, 128, 0.02);
+}
+
+@keyframes fadeInSlide {
+  0% { opacity: 0; transform: translateY(-8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Event Type Badge */
+.event-type {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.live-indicator {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* Event Details */
+.event-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.event-primary {
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-secondary {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-secondary a { color: var(--purple); text-decoration: none; }
+.event-secondary a:hover { text-decoration: underline; }
+
+/* Parties */
+.event-parties {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.event-parties a { color: var(--text-muted); text-decoration: none; }
+.event-parties a:hover { color: var(--accent); }
+
+.arrow { color: var(--text-dim); margin: 0 2px; }
+
+/* Amount */
+.event-amount {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.event-amount.positive { color: var(--green); }
+.event-amount.neutral { color: var(--text-muted); }
+
+/* Time */
+.event-time {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.event-time a { color: var(--text-dim); text-decoration: none; }
+.event-time a:hover { color: var(--accent); }
+
+/* ── Auction Banner ── */
+.auction-banner {
+  margin-bottom: 20px;
+  padding: 20px 24px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  border-left: 3px solid var(--purple);
+}
+
+.auction-banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.auction-banner-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--purple);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.auction-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.live-auctions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.live-auction-card {
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+
+.live-auction-card:hover {
+  border-color: var(--border-hover);
+  background: var(--bg-card-hover);
+}
+
+.lac-token {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lac-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.lac-bid {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--green);
+  font-weight: 500;
+}
+
+.lac-timer {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lac-timer.urgent { color: var(--red); }
+.lac-timer.active { color: var(--yellow); }
+.lac-timer.pending { color: var(--text-dim); }
+
+.lac-bids {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* ── Stats Bar ── */
+.stats-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.stat-card {
+  padding: 16px 18px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+
+.stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.stat-value.accent { color: var(--accent); }
+.stat-value.green { color: var(--green); }
+.stat-value.purple { color: var(--purple); }
+
+/* ── Empty / Loading ── */
+.empty-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-dim);
+}
+
+.empty-state .icon {
+  font-size: 40px;
+  margin-bottom: 16px;
+  opacity: 0.3;
+}
+
+.empty-state p {
+  font-size: 14px;
+  margin-bottom: 6px;
+}
+
+.empty-state .hint {
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.skeleton-row {
+  height: 56px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(110deg, var(--bg-card) 30%, var(--bg-card-hover) 50%, var(--bg-card) 70%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 28px;
+  text-align: center;
+  margin-top: 60px;
+}
+
+.footer a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: none;
+}
+
+.footer a:hover { color: var(--text-muted); }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header { padding: 12px 16px; }
+  .header-nav { display: none; }
+  .main { padding: 70px 16px 24px; }
+  .feed-header { flex-direction: column; align-items: flex-start; gap: 14px; }
+  .feed-status { width: 100%; justify-content: flex-start; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); }
+  .stats-bar .stat-card:last-child { grid-column: span 2; }
+  .filters { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+  .event-row { grid-template-columns: 100px 1fr 80px; }
+  .event-parties, .event-amount { display: none; }
+  .live-auctions-grid { grid-template-columns: 1fr; }
+  .auction-banner { padding: 16px; }
+}
+
+@media (max-width: 480px) {
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  .stat-value { font-size: 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <svg class="logo" viewBox="0 0 32 32" width="26" height="26" fill="none" aria-label="Rare Protocol logo">
+      <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2"/>
+      <path d="M9 10h6a4 4 0 0 1 0 8h-2l5 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <span class="logo-text">Rare <span class="logo-accent">Protocol</span></span>
+  </div>
+  <nav class="header-nav">
+    <a href="./" class="nav-link">Home</a>
+    <a href="./app.html" class="nav-link">App</a>
+    <a href="./activity.html" class="nav-link active">Activity</a>
+    <a href="./profile.html" class="nav-link">Profile</a>
+    <a href="./docs.html" class="nav-link">Docs</a>
+  </nav>
+  <a href="./app.html" class="btn-primary">Launch App &rarr;</a>
+</header>
+
+<div class="main">
+
+  <!-- Feed Header -->
+  <div class="feed-header">
+    <div class="feed-title-area">
+      <h1>Activity Feed</h1>
+      <p class="feed-subtitle">All protocol events on Sepolia — auctions, sales, listings, offers, mints</p>
+    </div>
+    <div class="feed-status">
+      <div class="status-badge" id="indexerStatus">
+        <span class="status-dot syncing" id="statusDot"></span>
+        <span id="statusText">Connecting...</span>
+      </div>
+      <div class="live-badge" id="liveBadge" style="display:none">
+        <span class="live-pulse"></span>
+        LIVE
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-card">
+      <div class="stat-label">Total Events</div>
+      <div class="stat-value accent" id="statEvents">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Live Auctions</div>
+      <div class="stat-value purple" id="statAuctions">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Collections</div>
+      <div class="stat-value" id="statCollections">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Indexed Block</div>
+      <div class="stat-value" id="statBlock">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Live Events</div>
+      <div class="stat-value green" id="statLiveEvents">0</div>
+    </div>
+  </div>
+
+  <!-- Live Auctions Banner (shown when auctions are active) -->
+  <div class="auction-banner" id="auctionBanner" style="display:none">
+    <div class="auction-banner-header">
+      <div class="auction-banner-title">
+        <span>&#x23F1;</span> Live Auctions
+      </div>
+      <span class="auction-count" id="auctionCount"></span>
+    </div>
+    <div class="live-auctions-grid" id="liveAuctionsGrid"></div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters" id="filters">
+    <button class="filter-btn active" data-filter="all">All Events</button>
+    <button class="filter-btn" data-filter="auction">Auctions</button>
+    <button class="filter-btn" data-filter="sale">Sales</button>
+    <button class="filter-btn" data-filter="listing">Listings</button>
+    <button class="filter-btn" data-filter="offer">Offers</button>
+    <button class="filter-btn" data-filter="mint">Mints</button>
+    <button class="filter-btn" data-filter="collection">Collections</button>
+  </div>
+
+  <!-- Event Feed -->
+  <div class="feed-list" id="feedList">
+    <!-- Loading skeletons -->
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+    <div class="skeleton-row"></div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">
+    Created with Perplexity Computer
+  </a>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
+<script src="./contracts.js"></script>
+<script src="./indexer.js"></script>
+<script>
+/* global ethers, CONTRACTS, BAZAAR_ABI, SOVEREIGN_NFT_ABI, APP_REGISTRY_ABI,
+   indexerGetActivity, indexerGetAuctions, indexerGetStats, indexerGetCollections,
+   resolveIPFS, shortAddr, formatTimeAgo, formatEth, ACTIVITY_LABELS, ETHERSCAN_BASE */
+
+// ── State ──
+var allEvents = [];          // Merged: indexer + live
+var liveEvents = [];         // Real-time captured events
+var activeFilter = "all";
+var liveAuctions = [];
+var lastPolledBlock = 0;
+var pollInterval = null;
+var auctionTimerInterval = null;
+var liveEventCount = 0;
+
+// Sepolia RPC (public, for read-only polling)
+var SEPOLIA_RPC = "https://rpc.sepolia.org";
+var ETHERSCAN = ETHERSCAN_BASE || "https://sepolia.etherscan.io";
+var DEPLOYMENT_BLOCK = 10416876;
+
+// ── Filter mapping ──
+var FILTER_MAP = {
+  all: null,
+  auction: ["AUCTION_CREATED", "AUCTION_BID", "AUCTION_SETTLED", "AUCTION_CANCELLED"],
+  sale: ["SALE"],
+  listing: ["LIST", "DELIST"],
+  offer: ["OFFER_PLACED", "OFFER_ACCEPTED", "OFFER_CANCELLED"],
+  mint: ["MINT"],
+  collection: ["CONTRACT_CREATED", "APP_REGISTERED"]
+};
+
+// ── Bazaar event signatures for eth_getLogs ──
+var EVENT_TOPICS = {
+  Sold:            ethers.id("Sold(address,address,address,address,uint256,uint256,address,uint256,uint256)"),
+  SetSalePrice:    ethers.id("SetSalePrice(address,address,address,uint256,uint256,address,uint16)"),
+  OfferPlaced:     ethers.id("OfferPlaced(address,address,uint256,address,uint256,bool)"),
+  AcceptOffer:     ethers.id("AcceptOffer(address,address,address,address,uint256,uint256,address,uint256,uint256)"),
+  CancelOffer:     ethers.id("CancelOffer(address,address,uint256,address,uint256)"),
+  NewAuction:      ethers.id("NewAuction(address,uint256,address,address,uint256,uint256,uint256)"),
+  AuctionBid:      ethers.id("AuctionBid(address,address,uint256,address,uint256,bool,uint256,address)"),
+  AuctionSettled:  ethers.id("AuctionSettled(address,address,address,uint256,address,uint256,address,uint256,uint256)"),
+  CancelAuction:   ethers.id("CancelAuction(address,uint256,address)"),
+  Mint:            ethers.id("Mint(address,address,address,uint256,string)"),
+  ContractCreated: ethers.id("ContractCreated(address,address,string,string)"),
+  AppRegistered:   ethers.id("AppRegistered(address,uint16)")
+};
+
+// Reverse lookup from topic to event name
+var TOPIC_TO_EVENT = {};
+Object.keys(EVENT_TOPICS).forEach(function(name) {
+  TOPIC_TO_EVENT[EVENT_TOPICS[name]] = name;
+});
+
+// Map event name to activity type
+var EVENT_TO_ACTIVITY = {
+  Sold: "SALE",
+  SetSalePrice: "LIST",
+  OfferPlaced: "OFFER_PLACED",
+  AcceptOffer: "OFFER_ACCEPTED",
+  CancelOffer: "OFFER_CANCELLED",
+  NewAuction: "AUCTION_CREATED",
+  AuctionBid: "AUCTION_BID",
+  AuctionSettled: "AUCTION_SETTLED",
+  CancelAuction: "AUCTION_CANCELLED",
+  Mint: "MINT",
+  ContractCreated: "CONTRACT_CREATED",
+  AppRegistered: "APP_REGISTERED"
+};
+
+// Extend ACTIVITY_LABELS for types not in indexer.js
+if (!ACTIVITY_LABELS.CONTRACT_CREATED) {
+  ACTIVITY_LABELS.CONTRACT_CREATED = { label: "Collection deployed", color: "var(--accent)" };
+}
+if (!ACTIVITY_LABELS.APP_REGISTERED) {
+  ACTIVITY_LABELS.APP_REGISTERED = { label: "App registered", color: "var(--yellow)" };
+}
+
+// ── Init ──
+
+(async function init() {
+  await Promise.all([
+    loadIndexerData(),
+    loadLiveAuctions(),
+    loadStats()
+  ]);
+  startLivePolling();
+  startAuctionTimers();
+  setupFilters();
+})();
+
+// ── Load Historical Data from Indexer ──
+
+async function loadIndexerData() {
+  try {
+    var activities = await indexerGetActivity({ limit: 200 });
+    allEvents = activities.map(function(a) {
+      return {
+        id: a.id,
+        type: a.activityType,
+        tokenId: a.token_id || "",
+        from: a.from || "",
+        to: a.to || "",
+        amount: a.amount || "",
+        currency: a.currencyAddress || "",
+        timestamp: Number(a.timestamp),
+        txHash: a.txHash || "",
+        isLive: false,
+        source: "indexer"
+      };
+    });
+    renderFeed();
+  } catch (e) {
+    console.error("Indexer load failed:", e);
+    document.getElementById("feedList").innerHTML =
+      '<div class="empty-state"><div class="icon">&#9888;</div><p>Could not load from indexer</p>' +
+      '<p class="hint">' + escapeHtml(e.message) + '</p></div>';
+  }
+}
+
+// ── Load Live Auctions ──
+
+async function loadLiveAuctions() {
+  try {
+    var auctions = await indexerGetAuctions({ limit: 20 });
+    liveAuctions = auctions.filter(function(a) { return a.isLive; });
+    renderAuctionBanner();
+  } catch (e) {
+    console.warn("Could not load auctions:", e);
+  }
+}
+
+// ── Load Stats ──
+
+async function loadStats() {
+  try {
+    var stats = await indexerGetStats();
+    var dot = document.getElementById("statusDot");
+    var text = document.getElementById("statusText");
+
+    if (stats.indexer && stats.indexer.latest_processed_block > 0) {
+      dot.className = "status-dot";
+      text.textContent = "Block " + stats.indexer.latest_processed_block.toLocaleString();
+      document.getElementById("statBlock").textContent = stats.indexer.latest_processed_block.toLocaleString();
+      document.getElementById("statEvents").textContent = (stats.indexer.num_events_processed || 0).toLocaleString();
+    } else {
+      dot.className = "status-dot syncing";
+      text.textContent = "Syncing...";
+      document.getElementById("statBlock").textContent = "syncing";
+      document.getElementById("statEvents").textContent = "—";
+    }
+
+    var collections = await indexerGetCollections(1000);
+    document.getElementById("statCollections").textContent = collections.length;
+
+  } catch (e) {
+    document.getElementById("statusDot").className = "status-dot offline";
+    document.getElementById("statusText").textContent = "Offline";
+  }
+}
+
+// ── Real-Time Event Polling ──
+
+async function startLivePolling() {
+  try {
+    var rpcProvider = new ethers.JsonRpcProvider(SEPOLIA_RPC);
+    lastPolledBlock = await rpcProvider.getBlockNumber();
+    document.getElementById("liveBadge").style.display = "inline-flex";
+
+    pollInterval = setInterval(async function() {
+      try {
+        var currentBlock = await rpcProvider.getBlockNumber();
+        if (currentBlock <= lastPolledBlock) return;
+
+        var fromBlock = lastPolledBlock + 1;
+        var toBlock = currentBlock;
+        lastPolledBlock = currentBlock;
+
+        // Query logs from all monitored contracts
+        var allTopics = Object.values(EVENT_TOPICS);
+
+        // Bazaar events
+        var bazaarLogs = await rpcProvider.getLogs({
+          address: CONTRACTS.bazaar,
+          fromBlock: fromBlock,
+          toBlock: toBlock,
+          topics: [allTopics.slice(0, 9)] // Bazaar event topics
+        });
+
+        // Minter events (Mint)
+        var minterLogs = await rpcProvider.getLogs({
+          address: CONTRACTS.minter,
+          fromBlock: fromBlock,
+          toBlock: toBlock,
+          topics: [[EVENT_TOPICS.Mint]]
+        });
+
+        // Factory events (ContractCreated)
+        var factoryLogs = await rpcProvider.getLogs({
+          address: CONTRACTS.factory,
+          fromBlock: fromBlock,
+          toBlock: toBlock,
+          topics: [[EVENT_TOPICS.ContractCreated]]
+        });
+
+        // Registry events (AppRegistered)
+        var registryLogs = await rpcProvider.getLogs({
+          address: CONTRACTS.appRegistry,
+          fromBlock: fromBlock,
+          toBlock: toBlock,
+          topics: [[EVENT_TOPICS.AppRegistered]]
+        });
+
+        var allLogs = bazaarLogs.concat(minterLogs, factoryLogs, registryLogs);
+
+        if (allLogs.length === 0) return;
+
+        // Process each log
+        for (var i = 0; i < allLogs.length; i++) {
+          var log = allLogs[i];
+          var parsed = parseLog(log);
+          if (!parsed) continue;
+
+          // Check for duplicate by txHash
+          var isDupe = allEvents.some(function(e) {
+            return e.txHash === parsed.txHash && e.type === parsed.type;
+          });
+          if (isDupe) continue;
+
+          // Get block timestamp
+          try {
+            var block = await rpcProvider.getBlock(log.blockNumber);
+            parsed.timestamp = block ? block.timestamp : Math.floor(Date.now() / 1000);
+          } catch (err) {
+            parsed.timestamp = Math.floor(Date.now() / 1000);
+          }
+
+          parsed.isLive = true;
+          parsed.source = "live";
+          liveEventCount++;
+
+          // Prepend to allEvents
+          allEvents.unshift(parsed);
+          liveEvents.push(parsed);
+
+          // If auction event, refresh live auctions
+          if (parsed.type.startsWith("AUCTION_")) {
+            loadLiveAuctions();
+          }
+        }
+
+        if (allLogs.length > 0) {
+          document.getElementById("statLiveEvents").textContent = liveEventCount;
+          renderFeed();
+        }
+
+      } catch (err) {
+        console.warn("Poll error:", err);
+      }
+    }, 6000); // Poll every 6 seconds (~1 Sepolia block)
+
+  } catch (e) {
+    console.warn("Could not start live polling:", e);
+    document.getElementById("liveBadge").style.display = "none";
+  }
+}
+
+// ── Parse Raw Log into Event ──
+
+function parseLog(log) {
+  if (!log.topics || log.topics.length === 0) return null;
+
+  var eventName = TOPIC_TO_EVENT[log.topics[0]];
+  if (!eventName) return null;
+
+  var activityType = EVENT_TO_ACTIVITY[eventName];
+  var result = {
+    id: log.transactionHash + "-" + log.logIndex,
+    type: activityType,
+    tokenId: "",
+    from: "",
+    to: "",
+    amount: "",
+    currency: "",
+    timestamp: 0,
+    txHash: log.transactionHash,
+    blockNumber: log.blockNumber,
+    isLive: true,
+    source: "live"
+  };
+
+  try {
+    // Parse indexed topics based on event type
+    switch (eventName) {
+      case "Sold":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.to = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        result.from = log.topics[3] ? ethers.getAddress("0x" + log.topics[3].slice(26)) : "";
+        if (log.data && log.data.length >= 130) {
+          result.amount = ethers.toBigInt("0x" + log.data.slice(66, 130)).toString();
+        }
+        break;
+
+      case "SetSalePrice":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        break;
+
+      case "OfferPlaced":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.from = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        break;
+
+      case "AcceptOffer":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.from = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        result.to = log.topics[3] ? ethers.getAddress("0x" + log.topics[3].slice(26)) : "";
+        break;
+
+      case "CancelOffer":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.from = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        break;
+
+      case "NewAuction":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.from = log.topics[3] ? ethers.getAddress("0x" + log.topics[3].slice(26)) : "";
+        break;
+
+      case "AuctionBid":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.from = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        break;
+
+      case "AuctionSettled":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.to = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        break;
+
+      case "CancelAuction":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.from = log.topics[3] ? ethers.getAddress("0x" + log.topics[3].slice(26)) : "";
+        break;
+
+      case "Mint":
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) + "-*" : "";
+        result.to = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        result.from = log.topics[3] ? ethers.getAddress("0x" + log.topics[3].slice(26)) : "";
+        break;
+
+      case "ContractCreated":
+        result.from = log.topics[2] ? ethers.getAddress("0x" + log.topics[2].slice(26)) : "";
+        result.tokenId = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) : "";
+        break;
+
+      case "AppRegistered":
+        result.from = log.topics[1] ? ethers.getAddress("0x" + log.topics[1].slice(26)) : "";
+        break;
+    }
+  } catch (err) {
+    console.warn("Parse error for " + eventName + ":", err);
+  }
+
+  return result;
+}
+
+// ── Render Feed ──
+
+function renderFeed() {
+  var feed = document.getElementById("feedList");
+  var filtered = allEvents;
+
+  // Apply filter
+  if (activeFilter !== "all" && FILTER_MAP[activeFilter]) {
+    var types = FILTER_MAP[activeFilter];
+    filtered = allEvents.filter(function(e) {
+      return types.indexOf(e.type) !== -1;
+    });
+  }
+
+  // Sort by timestamp descending
+  filtered.sort(function(a, b) { return b.timestamp - a.timestamp; });
+
+  if (filtered.length === 0) {
+    feed.innerHTML = '<div class="empty-state"><div class="icon">&#9671;</div>' +
+      '<p>No events found</p><p class="hint">Events will appear here as they happen on Sepolia</p></div>';
+    return;
+  }
+
+  feed.innerHTML = "";
+
+  // Limit to 100 most recent
+  var shown = filtered.slice(0, 100);
+
+  shown.forEach(function(evt) {
+    var info = ACTIVITY_LABELS[evt.type] || { label: evt.type, color: "var(--text-dim)" };
+    var isAuction = evt.type.startsWith("AUCTION_");
+
+    var row = document.createElement("div");
+    row.className = "event-row" + (evt.isLive ? " is-live" : "") + (isAuction ? " is-auction" : "");
+
+    // Type badge with optional live indicator
+    var typeBadge = '<span class="event-type" style="background:' + info.color + '12;color:' + info.color + '">';
+    if (evt.isLive) {
+      typeBadge += '<span class="live-indicator"></span>';
+    }
+    typeBadge += info.label + '</span>';
+
+    // Event details
+    var tokenDisplay = evt.tokenId || "—";
+    if (tokenDisplay.length > 20) {
+      var parts = tokenDisplay.split("-");
+      tokenDisplay = shortAddr(parts[0]) + (parts[1] ? " #" + parts[1] : "");
+    }
+
+    var details = '<div class="event-details">';
+    details += '<span class="event-primary">' + escapeHtml(getEventDescription(evt)) + '</span>';
+    details += '<span class="event-secondary">' + escapeHtml(tokenDisplay) + '</span>';
+    details += '</div>';
+
+    // Parties
+    var parties = '<span class="event-parties">';
+    if (evt.from) {
+      parties += '<a href="' + ETHERSCAN + '/address/' + evt.from + '" target="_blank" rel="noopener noreferrer">' + shortAddr(evt.from) + '</a>';
+    }
+    if (evt.from && evt.to) {
+      parties += ' <span class="arrow">&rarr;</span> ';
+    }
+    if (evt.to) {
+      parties += '<a href="' + ETHERSCAN + '/address/' + evt.to + '" target="_blank" rel="noopener noreferrer">' + shortAddr(evt.to) + '</a>';
+    }
+    if (!evt.from && !evt.to) parties += "—";
+    parties += '</span>';
+
+    // Amount
+    var amountClass = evt.amount ? "positive" : "neutral";
+    var amountDisplay = evt.amount ? formatEth(evt.amount) : "—";
+    var amount = '<span class="event-amount ' + amountClass + '">' + amountDisplay + '</span>';
+
+    // Time
+    var timeStr = evt.timestamp ? formatTimeAgo(evt.timestamp) : "just now";
+    var time = '<span class="event-time">';
+    if (evt.txHash) {
+      time += '<a href="' + ETHERSCAN + '/tx/' + evt.txHash + '" target="_blank" rel="noopener noreferrer">' + timeStr + '</a>';
+    } else {
+      time += timeStr;
+    }
+    time += '</span>';
+
+    row.innerHTML = typeBadge + details + parties + amount + time;
+    feed.appendChild(row);
+  });
+}
+
+// ── Event Description Helper ──
+
+function getEventDescription(evt) {
+  switch (evt.type) {
+    case "SALE": return "NFT sold";
+    case "LIST": return "Listed for sale";
+    case "DELIST": return "Listing removed";
+    case "OFFER_PLACED": return "Offer placed";
+    case "OFFER_ACCEPTED": return "Offer accepted";
+    case "OFFER_CANCELLED": return "Offer cancelled";
+    case "AUCTION_CREATED": return "Auction created";
+    case "AUCTION_BID": return "New bid placed";
+    case "AUCTION_SETTLED": return "Auction settled";
+    case "AUCTION_CANCELLED": return "Auction cancelled";
+    case "MINT": return "NFT minted";
+    case "CONTRACT_CREATED": return "Collection deployed";
+    case "APP_REGISTERED": return "App registered";
+    default: return evt.type;
+  }
+}
+
+// ── Render Live Auctions Banner ──
+
+function renderAuctionBanner() {
+  var banner = document.getElementById("auctionBanner");
+  var grid = document.getElementById("liveAuctionsGrid");
+
+  if (liveAuctions.length === 0) {
+    banner.style.display = "none";
+    document.getElementById("statAuctions").textContent = "0";
+    return;
+  }
+
+  banner.style.display = "block";
+  document.getElementById("auctionCount").textContent = liveAuctions.length + " active";
+  document.getElementById("statAuctions").textContent = liveAuctions.length;
+
+  grid.innerHTML = "";
+  liveAuctions.forEach(function(auction) {
+    var card = document.createElement("div");
+    card.className = "live-auction-card";
+    card.setAttribute("data-auction-ends", auction.endsAt);
+
+    var tokenDisplay = auction.token_id || "—";
+    if (tokenDisplay.length > 25) {
+      var parts = tokenDisplay.split("-");
+      tokenDisplay = shortAddr(parts[0]) + " #" + (parts[1] || "?");
+    }
+
+    var timerClass = "active";
+    var remaining = auction.timeRemaining;
+    if (remaining < 300) timerClass = "urgent";
+
+    card.innerHTML =
+      '<div class="lac-token">' + escapeHtml(tokenDisplay) + '</div>' +
+      '<div class="lac-meta">' +
+        '<span class="lac-bid">' + (auction.highestBid ? formatEth(auction.highestBid) : (auction.minimumBid ? formatEth(auction.minimumBid) + ' min' : '—')) + '</span>' +
+        '<span class="lac-timer ' + timerClass + '" data-ends="' + auction.endsAt + '">' + formatCountdown(remaining) + '</span>' +
+      '</div>' +
+      '<div class="lac-bids">' + (auction.bidCount || 0) + ' bid' + ((auction.bidCount || 0) !== 1 ? 's' : '') +
+        (auction.highestBidder ? ' · leader: ' + shortAddr(auction.highestBidder) : '') +
+      '</div>';
+
+    grid.appendChild(card);
+  });
+}
+
+// ── Countdown Formatter ──
+
+function formatCountdown(seconds) {
+  if (!seconds || seconds <= 0) return "ended";
+  var h = Math.floor(seconds / 3600);
+  var m = Math.floor((seconds % 3600) / 60);
+  var s = seconds % 60;
+  if (h > 0) return h + "h " + m + "m";
+  if (m > 0) return m + "m " + s + "s";
+  return s + "s";
+}
+
+// ── Auction Timer Updates ──
+
+function startAuctionTimers() {
+  auctionTimerInterval = setInterval(function() {
+    var timers = document.querySelectorAll(".lac-timer[data-ends]");
+    var now = Math.floor(Date.now() / 1000);
+
+    timers.forEach(function(el) {
+      var endsAt = Number(el.getAttribute("data-ends"));
+      var remaining = endsAt - now;
+
+      if (remaining <= 0) {
+        el.textContent = "ended";
+        el.className = "lac-timer pending";
+      } else {
+        el.textContent = formatCountdown(remaining);
+        el.className = remaining < 300 ? "lac-timer urgent" : "lac-timer active";
+      }
+    });
+  }, 1000);
+}
+
+// ── Filter Logic ──
+
+function setupFilters() {
+  document.querySelectorAll(".filter-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      document.querySelectorAll(".filter-btn").forEach(function(b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      activeFilter = btn.getAttribute("data-filter");
+      renderFeed();
+    });
+  });
+}
+
+// ── Utils ──
+
+function escapeHtml(s) {
+  if (!s) return "";
+  var d = document.createElement("div");
+  d.textContent = s;
+  return d.innerHTML;
+}
+</script>
+
+</body>
+</html>
