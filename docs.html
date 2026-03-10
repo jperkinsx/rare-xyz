@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!--
+   ______                            __
+  / ____/___  ____ ___  ____  __  __/ /____  _____
+ / /   / __ \/ __ `__ \/ __ \/ / / / __/ _ \/ ___/
+/ /___/ /_/ / / / / / / /_/ / /_/ / /_/  __/ /
+\____/\____/_/ /_/ /_/ .___/\__,_/\__/\___/_/
+                    /_/
+        Created with Perplexity Computer
+        https://www.perplexity.ai/computer
+-->
+<meta name="generator" content="Perplexity Computer">
+<meta name="author" content="Perplexity Computer">
+<meta property="og:see_also" content="https://www.perplexity.ai/computer">
+<link rel="author" href="https://www.perplexity.ai/computer">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Docs — Rare Protocol</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --bg: #08080a;
+  --bg-surface: #0f0f12;
+  --bg-card: #131316;
+  --bg-header: rgba(8, 8, 10, 0.85);
+  --border: #1c1c21;
+  --border-hover: #28282e;
+  --text: #e4e4e7;
+  --text-muted: #71717a;
+  --text-dim: #52525b;
+  --accent: #22d3ee;
+  --accent-dim: rgba(34, 211, 238, 0.12);
+  --green: #4ade80;
+  --purple: #a78bfa;
+  --purple-dim: rgba(167, 139, 250, 0.1);
+  --yellow: #facc15;
+  --red: #f87171;
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --max-w: 760px;
+  --radius: 10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.7;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Header (same as landing) ── */
+.header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--bg-header);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+
+.header-left { display: flex; align-items: center; gap: 10px; }
+.logo { color: var(--accent); }
+.logo-text { font-family: var(--font-sans); font-size: 15px; font-weight: 700; letter-spacing: -0.02em; }
+.logo-accent { color: var(--accent); }
+
+.header-nav { display: flex; align-items: center; gap: 2px; }
+.nav-link {
+  font-family: var(--font-mono); font-size: 12px; padding: 6px 12px;
+  border-radius: 6px; color: var(--text-muted); text-decoration: none; transition: all 0.15s ease;
+}
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.04); text-decoration: none; }
+.nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+.btn-primary {
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+  padding: 8px 18px; background: var(--accent); color: var(--bg);
+  border: none; border-radius: 6px; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s ease;
+}
+.btn-primary:hover { opacity: 0.9; text-decoration: none; }
+
+/* ── Layout ── */
+.docs-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-top: 60px;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  position: sticky;
+  top: 60px;
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+  padding: 28px 16px 28px 28px;
+  border-right: 1px solid var(--border);
+}
+
+.sidebar-group { margin-bottom: 24px; }
+
+.sidebar-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+
+.sidebar-link {
+  display: block;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 4px 0;
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.sidebar-link:hover { color: var(--text); text-decoration: none; }
+
+/* ── Content ── */
+.docs-content {
+  padding: 40px 40px 80px;
+  max-width: var(--max-w);
+}
+
+.docs-content h1 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 8px;
+}
+
+.docs-content .subtitle {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+}
+
+.docs-content h2 {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin-top: 48px;
+  margin-bottom: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.docs-content h2:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 0;
+}
+
+.docs-content h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 28px;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.docs-content p {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  line-height: 1.75;
+}
+
+.docs-content ul, .docs-content ol {
+  margin-bottom: 16px;
+  padding-left: 20px;
+}
+
+.docs-content li {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  line-height: 1.65;
+}
+
+.docs-content li strong { color: var(--text); }
+
+.docs-content code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--accent);
+}
+
+/* ── Code blocks ── */
+.code-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.code-block-header {
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.code-block pre {
+  padding: 16px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-x: auto;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+.code-block pre .kw { color: var(--purple); }
+.code-block pre .fn { color: var(--accent); }
+.code-block pre .str { color: var(--green); }
+.code-block pre .cm { color: var(--text-dim); }
+.code-block pre .addr { color: var(--purple); }
+
+/* ── Contract table ── */
+.contract-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  font-size: 13px;
+}
+
+.contract-table th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-dim);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.contract-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.contract-table td:first-child { color: var(--text); font-weight: 500; }
+
+.contract-table td code {
+  font-size: 11px;
+  word-break: break-all;
+}
+
+/* ── Callout ── */
+.callout {
+  background: var(--accent-dim);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.callout p {
+  color: var(--text);
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+.callout strong { color: var(--accent); }
+
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 40px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.footer a { color: var(--text-dim); }
+.footer a:hover { color: var(--text-muted); }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header { padding: 12px 16px; }
+  .header-nav { display: none; }
+  .docs-layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .docs-content { padding: 28px 20px 60px; }
+  .docs-content h1 { font-size: 24px; }
+  .contract-table { font-size: 11px; }
+  .contract-table td code { font-size: 10px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <svg class="logo" viewBox="0 0 32 32" width="26" height="26" fill="none" aria-label="Rare Protocol logo">
+      <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2"/>
+      <path d="M9 10h6a4 4 0 0 1 0 8h-2l5 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <span class="logo-text">Rare <span class="logo-accent">Protocol</span></span>
+  </div>
+  <nav class="header-nav">
+    <a href="./" class="nav-link">Home</a>
+    <a href="./app.html" class="nav-link">App</a>
+    <a href="./docs.html" class="nav-link active">Docs</a>
+  </nav>
+  <a href="./app.html" class="btn-primary">Launch App &rarr;</a>
+</header>
+
+<div class="docs-layout">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-group">
+      <div class="sidebar-label">Overview</div>
+      <a href="#overview" class="sidebar-link">Introduction</a>
+      <a href="#architecture" class="sidebar-link">Architecture</a>
+      <a href="#contracts" class="sidebar-link">Contracts</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-label">Protocol</div>
+      <a href="#auctions" class="sidebar-link">Timed Auctions</a>
+      <a href="#fees" class="sidebar-link">Fee Structure</a>
+      <a href="#burn" class="sidebar-link">$RARE Burns</a>
+      <a href="#app-registry" class="sidebar-link">App Registry</a>
+    </div>
+    <div class="sidebar-group">
+      <div class="sidebar-label">Build</div>
+      <a href="#agent-skills" class="sidebar-link">Agent Skills</a>
+      <a href="#cli" class="sidebar-link">CLI Reference</a>
+      <a href="#api" class="sidebar-link">Indexer API</a>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="docs-content">
+    <h1 id="overview">Rare Protocol</h1>
+    <p class="subtitle">The open marketplace protocol for NFTs. Onchain auctions, agent-native tooling, $RARE burns.</p>
+
+    <p>Rare Protocol is a permissionless NFT marketplace protocol deployed on Ethereum. It provides onchain timed auctions, fixed-price sales, offers, and a fee architecture powered by the $RARE token. Anyone can interact with the contracts directly — no frontend required.</p>
+
+    <div class="callout">
+      <p><strong>Sepolia Testnet</strong> — The protocol is currently deployed on Sepolia for testing. All contracts are verified and open source.</p>
+    </div>
+
+    <h2 id="architecture">Architecture</h2>
+    <p>The protocol consists of five core contracts:</p>
+    <ul>
+      <li><strong>SuperRareBazaar</strong> — The marketplace hub. Handles sales, offers, auctions, and settlement. All trade flows route through here.</li>
+      <li><strong>RareMinter</strong> — Managed minting with configurable direct sale parameters, allowlists, and split payments.</li>
+      <li><strong>SovereignNFTContractFactory</strong> — Deploys new ERC-721 collections with ERC-2981 royalties. Each collection is its own contract, not a shared one.</li>
+      <li><strong>RareAppRegistry</strong> — Apps register here with a fee in basis points. The protocol takes a revenue share.</li>
+      <li><strong>$RARE Token</strong> — ERC-20 governance token. Protocol fee revenue is used to buy and burn $RARE.</li>
+    </ul>
+
+    <h2 id="contracts">Deployed Contracts (Sepolia)</h2>
+    <table class="contract-table">
+      <thead>
+        <tr><th>Contract</th><th>Address</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>SuperRareBazaar</td><td><code>0xCE999aeF38E1316A510615b80713b494658807c6</code></td></tr>
+        <tr><td>RareMinter</td><td><code>0xf689b3344090DdE8b7a2C6b942730fF05De29451</code></td></tr>
+        <tr><td>NFT Factory</td><td><code>0xeF4aac03af2684bE0BE2B07c451949CC4246085F</code></td></tr>
+        <tr><td>RareAppRegistry</td><td><code>0x3ad7694F899804206076F9A8E6F06719E360A90b</code></td></tr>
+        <tr><td>$RARE Token</td><td><code>0x197FaeF3f59eC80113e773Bb6206a17d183F97CB</code></td></tr>
+      </tbody>
+    </table>
+    <p>Deployment block: <code>10416876</code>. Deployer: <code>0x3B9C3C5EA16E7d3c9C0bb293a549aFa4066dc162</code>.</p>
+
+    <h2 id="auctions">Timed Auctions</h2>
+    <p>Rare Protocol is the only NFT protocol with fully onchain timed auctions. Three auction types are supported:</p>
+
+    <h3>Reserve Auction (Coldie)</h3>
+    <p>The auction clock starts when the first bid meets the minimum. If no one bids, the auction sits dormant. Once triggered, it runs for the configured duration with anti-snipe extensions on late bids.</p>
+
+    <h3>Scheduled Auction</h3>
+    <p>Set a future start time. The auction begins automatically at that timestamp and runs for the configured duration. Useful for coordinated drops.</p>
+
+    <h3>Anti-Snipe Extension</h3>
+    <p>Bids placed in the final minutes of an auction extend the clock. This prevents last-second sniping and ensures fair price discovery. The extension length is configurable by the protocol admin.</p>
+
+    <h3>Settlement</h3>
+    <p>After the auction ends, anyone can call <code>settleAuction()</code> to transfer the NFT to the winner and pay the seller. Settlement is permissionless — no relayer needed.</p>
+
+    <h2 id="fees">Fee Structure</h2>
+    <p>The fee architecture is designed around zero friction for casual users and revenue sharing for apps:</p>
+    <ul>
+      <li><strong>No app (<code>_app = address(0)</code>)</strong> — Zero protocol fees. Just gas and creator royalties (ERC-2981).</li>
+      <li><strong>Registered app</strong> — The app's fee (set in basis points) is deducted from the sale. The protocol takes a configurable share (default 20%) of the app fee.</li>
+    </ul>
+    <p>Fee calculation: On a 1 ETH sale through an app with 250 bps (2.5%) fee and 20% protocol share:</p>
+    <div class="code-block">
+      <div class="code-block-header">Fee breakdown</div>
+      <pre>Sale amount:        <span class="str">1.0 ETH</span>
+Creator royalty:    <span class="str">0.1 ETH</span>  <span class="cm">(10% via ERC-2981)</span>
+App fee:            <span class="str">0.025 ETH</span> <span class="cm">(2.5% of sale)</span>
+  App keeps:        <span class="str">0.020 ETH</span> <span class="cm">(80% of app fee)</span>
+  Protocol share:   <span class="str">0.005 ETH</span> <span class="cm">(20% of app fee → burned as $RARE)</span>
+Seller receives:    <span class="str">0.875 ETH</span></pre>
+    </div>
+
+    <h2 id="burn">$RARE Token Burns</h2>
+    <p>Protocol revenue (the protocol's share of app fees) accumulates in the network beneficiary address. This revenue is periodically used to:</p>
+    <ol>
+      <li>Buy $RARE on the open market</li>
+      <li>Burn the purchased $RARE, permanently removing it from supply</li>
+    </ol>
+    <p>Burn rate scales directly with marketplace volume. More sales through registered apps means more $RARE burned. Direct/casual usage (with no app) generates zero protocol revenue and zero burns — this is by design to keep the casual path frictionless.</p>
+
+    <h2 id="app-registry">App Registry</h2>
+    <p>Any address can register as a marketplace app:</p>
+    <div class="code-block">
+      <div class="code-block-header">Register an app</div>
+      <pre><span class="cm">// Register with a 2.5% fee (250 basis points)</span>
+<span class="fn">appRegistry.registerApp</span>(<span class="str">250</span>);
+
+<span class="cm">// Update fee later</span>
+<span class="fn">appRegistry.setAppFee</span>(<span class="str">300</span>); <span class="cm">// now 3%</span>
+
+<span class="cm">// Check an app's fee</span>
+<span class="kw">uint16</span> fee = <span class="fn">appRegistry.getAppFee</span>(<span class="addr">appAddress</span>);</pre>
+    </div>
+    <p>When users trade through your app, pass your address as the <code>_app</code> parameter in Bazaar functions (<code>setSalePrice</code>, <code>offer</code>, <code>configureAuction</code>). Your fee is automatically deducted and split with the protocol.</p>
+
+    <h2 id="agent-skills">Agent Skill Installation</h2>
+    <p>Add the Rare Protocol skill to your AI agent to enable NFT minting and auction management. The skill provides a complete set of marketplace commands that agents can execute directly against the Sepolia contracts.</p>
+
+    <h3>Installation</h3>
+    <div class="code-block">
+      <div class="code-block-header">skill-config.yaml</div>
+      <pre><span class="kw">name</span>: <span class="str">rare-protocol</span>
+<span class="kw">version</span>: <span class="str">2.4.1</span>
+<span class="kw">description</span>: <span class="str">Mint, list, auction, and trade NFTs on Rare Protocol</span>
+<span class="kw">network</span>: <span class="str">sepolia</span>
+<span class="kw">contracts</span>:
+  <span class="kw">bazaar</span>: <span class="addr">0xCE999aeF38E1316A510615b80713b494658807c6</span>
+  <span class="kw">minter</span>: <span class="addr">0xf689b3344090DdE8b7a2C6b942730fF05De29451</span>
+  <span class="kw">factory</span>: <span class="addr">0xeF4aac03af2684bE0BE2B07c451949CC4246085F</span>
+  <span class="kw">appRegistry</span>: <span class="addr">0x3ad7694F899804206076F9A8E6F06719E360A90b</span></pre>
+    </div>
+
+    <h3>Capabilities</h3>
+    <p>Once installed, your agent can:</p>
+    <ul>
+      <li><strong>Deploy collections</strong> — Create new ERC-721 contracts with custom name and symbol</li>
+      <li><strong>Mint NFTs</strong> — Mint tokens with IPFS metadata and ERC-2981 royalties</li>
+      <li><strong>Fixed-price sales</strong> — List tokens, buy listed tokens, delist</li>
+      <li><strong>Timed auctions</strong> — Create reserve/scheduled auctions, place bids, settle</li>
+      <li><strong>Offers</strong> — Place offers, cancel, accept (with optional convertible-to-auction flag)</li>
+      <li><strong>Query state</strong> — Read token ownership, sale prices, auction details, app fees</li>
+      <li><strong>App management</strong> — Register as an app, set fees, query fee info</li>
+    </ul>
+
+    <h3>Example: Agent-driven minting flow</h3>
+    <div class="code-block">
+      <div class="code-block-header">Natural language prompt</div>
+      <pre><span class="str">"Deploy a new collection called 'Dreamscapes' with symbol DRMS.</span>
+<span class="str"> Then mint 3 tokens using these IPFS URIs:</span>
+<span class="str">   - ipfs://QmHash1</span>
+<span class="str">   - ipfs://QmHash2</span>
+<span class="str">   - ipfs://QmHash3</span>
+<span class="str"> List #1 for 0.5 ETH and create a reserve auction</span>
+<span class="str"> for #2 with a 0.1 ETH minimum bid."</span></pre>
+    </div>
+    <p>The agent will execute the full sequence: factory deploy, 3x mintTo, setSalePrice, configureAuction — each as a separate transaction with wallet confirmation.</p>
+
+    <h2 id="cli">CLI Reference</h2>
+    <p>The <a href="./app.html">web CLI</a> provides a terminal interface for all protocol operations. Connect your wallet and type commands directly.</p>
+
+    <h3>Wallet</h3>
+    <div class="code-block">
+      <pre><span class="fn">connect</span>              <span class="cm">Connect MetaMask, switch to Sepolia</span>
+<span class="fn">status</span>               <span class="cm">Show address, balance, network</span>
+<span class="fn">contracts</span>            <span class="cm">List all deployed contract addresses</span></pre>
+    </div>
+
+    <h3>Minting</h3>
+    <div class="code-block">
+      <pre><span class="fn">mint deploy</span> <span class="kw">--name</span> <span class="str">"Name"</span> <span class="kw">--symbol</span> <span class="str">SYM</span>       <span class="cm">Deploy collection</span>
+<span class="fn">mint token</span>  <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--uri</span> <span class="str">ipfs://...</span>  <span class="cm">Mint NFT</span>
+<span class="fn">mint info</span>   <span class="kw">--contract</span> <span class="addr">0x...</span>                   <span class="cm">Collection info</span></pre>
+    </div>
+
+    <h3>Marketplace</h3>
+    <div class="code-block">
+      <pre><span class="fn">list</span>   <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span> <span class="kw">--price</span> <span class="str">0.5</span>    <span class="cm">List for sale</span>
+<span class="fn">buy</span>    <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span> <span class="kw">--price</span> <span class="str">0.5</span>    <span class="cm">Buy listed token</span>
+<span class="fn">delist</span> <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span>              <span class="cm">Remove listing</span></pre>
+    </div>
+
+    <h3>Auctions</h3>
+    <div class="code-block">
+      <pre><span class="fn">auction create</span>  <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span> <span class="kw">--min</span> <span class="str">0.1</span> <span class="kw">--duration</span> <span class="str">3600</span>
+<span class="fn">auction bid</span>     <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span> <span class="kw">--amount</span> <span class="str">0.2</span>
+<span class="fn">auction settle</span>  <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span>
+<span class="fn">auction cancel</span>  <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span>
+<span class="fn">auction info</span>    <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span></pre>
+    </div>
+
+    <h3>Offers</h3>
+    <div class="code-block">
+      <pre><span class="fn">offer place</span>  <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span> <span class="kw">--amount</span> <span class="str">0.3</span>
+<span class="fn">offer cancel</span> <span class="kw">--contract</span> <span class="addr">0x...</span> <span class="kw">--id</span> <span class="str">1</span></pre>
+    </div>
+
+    <h3>Apps</h3>
+    <div class="code-block">
+      <pre><span class="fn">apps register</span> <span class="kw">--fee</span> <span class="str">250</span>           <span class="cm">Register (250 bps = 2.5%)</span>
+<span class="fn">apps set-fee</span>  <span class="kw">--fee</span> <span class="str">300</span>           <span class="cm">Update fee</span>
+<span class="fn">apps info</span>     <span class="kw">--app</span> <span class="addr">0x...</span>         <span class="cm">Look up app fee</span></pre>
+    </div>
+
+    <h2 id="api">Indexer API</h2>
+    <p>The protocol is indexed by an <a href="https://envio.dev" target="_blank" rel="noopener noreferrer">Envio</a> indexer that tracks all marketplace events in real time.</p>
+    <div class="code-block">
+      <div class="code-block-header">GraphQL Endpoint</div>
+      <pre><span class="str">https://indexer.dev.hyperindex.xyz/d59a89b/v1/graphql</span></pre>
+    </div>
+    <p>The indexer tracks: sales, listings, offers, auctions, bids, settlements, mints, collection deployments, and app registrations. It also fetches IPFS metadata and resolves auction state onchain via Effects.</p>
+
+    <div class="footer">
+      <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

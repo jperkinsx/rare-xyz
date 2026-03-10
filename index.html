@@ -11,76 +11,785 @@
         Created with Perplexity Computer
         https://www.perplexity.ai/computer
 -->
-
-<!-- Perplexity Computer Attribution — SEO Meta Tags -->
 <meta name="generator" content="Perplexity Computer">
 <meta name="author" content="Perplexity Computer">
 <meta property="og:see_also" content="https://www.perplexity.ai/computer">
 <link rel="author" href="https://www.perplexity.ai/computer">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rare Protocol — CLI</title>
-<meta name="description" content="Rare Protocol interactive CLI. Connect your wallet and interact with the Sepolia marketplace contracts.">
+<title>Rare Protocol — The protocol for monetizing creativity</title>
+<meta name="description" content="Rare Protocol is the open marketplace protocol for NFTs. Onchain timed auctions, agent-native tooling, and $RARE-powered fee burns. For humans and agents.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap">
-<link rel="stylesheet" href="./style.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+:root {
+  --bg: #08080a;
+  --bg-surface: #0f0f12;
+  --bg-card: #131316;
+  --bg-card-hover: #18181c;
+  --bg-header: rgba(8, 8, 10, 0.85);
+  --border: #1c1c21;
+  --border-hover: #28282e;
+  --text: #e4e4e7;
+  --text-muted: #71717a;
+  --text-dim: #52525b;
+  --accent: #22d3ee;
+  --accent-glow: rgba(34, 211, 238, 0.08);
+  --accent-dim: rgba(34, 211, 238, 0.12);
+  --green: #4ade80;
+  --green-dim: rgba(74, 222, 128, 0.1);
+  --red: #f87171;
+  --purple: #a78bfa;
+  --purple-dim: rgba(167, 139, 250, 0.1);
+  --yellow: #facc15;
+  --yellow-dim: rgba(250, 204, 21, 0.08);
+  --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --max-w: 1080px;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── Header ── */
+.header {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 28px;
+  background: var(--bg-header);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  z-index: 100;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo { color: var(--accent); }
+
+.logo-text {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.logo-accent { color: var(--accent); }
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.nav-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.nav-link:hover { color: var(--text); background: rgba(255,255,255,0.04); text-decoration: none; }
+.nav-link.active { color: var(--accent); background: var(--accent-dim); }
+
+.btn-primary {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 18px;
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-primary:hover { opacity: 0.9; text-decoration: none; }
+
+/* ── Hero ── */
+.hero {
+  position: relative;
+  padding: 160px 28px 100px;
+  text-align: center;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -200px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 800px;
+  height: 800px;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 14px;
+  background: var(--accent-dim);
+  border: 1px solid rgba(34, 211, 238, 0.15);
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  margin-bottom: 28px;
+}
+
+.hero h1 {
+  font-size: clamp(36px, 6vw, 60px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  margin-bottom: 20px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero h1 .gradient {
+  background: linear-gradient(135deg, var(--accent), var(--purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero-sub {
+  font-size: 17px;
+  color: var(--text-muted);
+  max-width: 520px;
+  margin: 0 auto 36px;
+  line-height: 1.7;
+}
+
+.hero-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 18px;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-secondary:hover { color: var(--text); border-color: var(--border-hover); text-decoration: none; }
+
+/* ── Sections ── */
+.section {
+  max-width: var(--max-w);
+  margin: 0 auto;
+  padding: 80px 28px;
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+.section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 12px;
+}
+
+.section .lead {
+  font-size: 15px;
+  color: var(--text-muted);
+  max-width: 560px;
+  line-height: 1.7;
+  margin-bottom: 36px;
+}
+
+/* ── Feature Grid ── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.feature-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  transition: all 0.2s ease;
+}
+
+.feature-card:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--border-hover);
+}
+
+.feature-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  margin-bottom: 16px;
+}
+
+.feature-icon.cyan { background: var(--accent-dim); color: var(--accent); }
+.feature-icon.purple { background: var(--purple-dim); color: var(--purple); }
+.feature-icon.green { background: var(--green-dim); color: var(--green); }
+.feature-icon.yellow { background: var(--yellow-dim); color: var(--yellow); }
+
+.feature-card h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+
+.feature-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.65;
+}
+
+/* ── Auction Visual ── */
+.auction-section {
+  border-top: 1px solid var(--border);
+}
+
+.auction-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: center;
+}
+
+.auction-demo {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.auction-demo-header {
+  padding: 12px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.auction-demo-body {
+  padding: 24px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 2;
+}
+
+.auction-demo-body .label { color: var(--text-dim); }
+.auction-demo-body .val { color: var(--text); }
+.auction-demo-body .val.cyan { color: var(--accent); }
+.auction-demo-body .val.green { color: var(--green); }
+.auction-demo-body .val.purple { color: var(--purple); }
+.auction-demo-body .val.yellow { color: var(--yellow); }
+
+.auction-features {
+  list-style: none;
+  margin-top: 24px;
+}
+
+.auction-features li {
+  padding: 8px 0;
+  font-size: 14px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.auction-features li::before {
+  content: '>';
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── Burn Section ── */
+.burn-section {
+  border-top: 1px solid var(--border);
+}
+
+.burn-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.burn-visual {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 32px;
+}
+
+.burn-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.burn-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.burn-step-num {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.burn-step-num.s1 { background: var(--accent-dim); color: var(--accent); }
+.burn-step-num.s2 { background: var(--purple-dim); color: var(--purple); }
+.burn-step-num.s3 { background: var(--yellow-dim); color: var(--yellow); }
+.burn-step-num.s4 { background: rgba(248, 113, 113, 0.1); color: var(--red); }
+
+.burn-step-text {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.burn-step-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.burn-step-text span {
+  color: var(--text-muted);
+}
+
+.burn-arrow {
+  text-align: center;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  font-size: 14px;
+  padding: 0 0 0 14px;
+}
+
+/* ── Agent Section ── */
+.agent-section {
+  border-top: 1px solid var(--border);
+}
+
+.agent-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+}
+
+.code-block {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.code-header {
+  padding: 10px 16px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.code-header .dots {
+  display: flex;
+  gap: 5px;
+}
+
+.code-header .dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.code-header .dots span:nth-child(1) { background: #ff5f57; }
+.code-header .dots span:nth-child(2) { background: #febc2e; }
+.code-header .dots span:nth-child(3) { background: #28c840; }
+
+.code-header .filename {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-left: 4px;
+}
+
+.code-body {
+  padding: 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.85;
+  overflow-x: auto;
+  color: var(--text-muted);
+}
+
+.code-body .kw { color: var(--purple); }
+.code-body .fn { color: var(--accent); }
+.code-body .str { color: var(--green); }
+.code-body .cm { color: var(--text-dim); }
+.code-body .num { color: var(--yellow); }
+
+/* ── CTA ── */
+.cta-section {
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.cta-section h2 {
+  max-width: 500px;
+  margin: 0 auto 16px;
+}
+
+.cta-section .lead {
+  max-width: 460px;
+  margin: 0 auto 32px;
+}
+
+/* ── Footer ── */
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 28px;
+  max-width: var(--max-w);
+  margin: 0 auto;
+}
+
+.footer-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.footer-links {
+  display: flex;
+  gap: 20px;
+}
+
+.footer-links a {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+
+.footer-links a:hover { color: var(--text-muted); }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .header { padding: 12px 16px; }
+  .header-nav { display: none; }
+  .hero { padding: 120px 20px 60px; }
+  .hero h1 { font-size: 32px; }
+  .hero-sub { font-size: 15px; }
+  .section { padding: 48px 20px; }
+  .section h2 { font-size: 22px; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .auction-layout,
+  .burn-layout,
+  .agent-layout { grid-template-columns: 1fr; gap: 28px; }
+  .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+  .footer-links { flex-wrap: wrap; justify-content: center; }
+}
+</style>
 </head>
 <body>
-  <div id="app">
-    <!-- Header -->
-    <header class="header">
-      <div class="header-left">
-        <svg class="logo" viewBox="0 0 32 32" width="28" height="28" fill="none" aria-label="Rare Protocol logo">
-          <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2"/>
-          <path d="M9 10h6a4 4 0 0 1 0 8h-2l5 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-        <span class="logo-text">rare<span class="logo-accent">.</span>xyz</span>
-      </div>
-      <nav class="header-nav">
-        <a href="./index.html" class="nav-link active">CLI</a>
-        <a href="./profile.html" class="nav-link">Profile</a>
-      </nav>
-      <div class="header-right">
-        <button class="btn-wallet" id="walletBtn" onclick="handleWalletClick()">
-          Connect Wallet
-        </button>
-      </div>
-    </header>
 
-    <!-- Terminal -->
-    <main class="terminal-wrapper">
-      <div class="terminal">
-        <div class="terminal-header">
-          <div class="terminal-dots">
-            <span class="dot dot-red"></span>
-            <span class="dot dot-yellow"></span>
-            <span class="dot dot-green"></span>
-          </div>
-          <span class="terminal-title">rare-cli v2.4.1</span>
-          <button class="btn-clear" onclick="clearTerminal()" title="Clear terminal">clear</button>
-        </div>
-        <div class="terminal-body" id="terminalBody">
-          <div id="output"></div>
-          <div class="input-line" id="inputLine">
-            <span class="prompt">rare&gt;</span>
-            <input type="text" id="cmdInput" class="cmd-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="type 'help' for commands...">
-          </div>
-        </div>
-      </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="footer">
-      <span class="footer-text">Sepolia contracts &middot; 0xCE99...07c6</span>
-      <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer" class="footer-link">
-        Created with Perplexity Computer
-      </a>
-    </footer>
+<!-- Header -->
+<header class="header">
+  <div class="header-left">
+    <svg class="logo" viewBox="0 0 32 32" width="26" height="26" fill="none" aria-label="Rare Protocol logo">
+      <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2"/>
+      <path d="M9 10h6a4 4 0 0 1 0 8h-2l5 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+    <span class="logo-text">Rare <span class="logo-accent">Protocol</span></span>
   </div>
+  <nav class="header-nav">
+    <a href="./" class="nav-link active">Home</a>
+    <a href="./app.html" class="nav-link">App</a>
+    <a href="./docs.html" class="nav-link">Docs</a>
+  </nav>
+  <a href="./app.html" class="btn-primary">Launch App &rarr;</a>
+</header>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.4/dist/ethers.umd.min.js"></script>
-  <script src="./contracts.js"></script>
-  <script src="./app.js"></script>
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-badge">Powered by $RARE</div>
+  <h1>The protocol for<br><span class="gradient">monetizing creativity</span></h1>
+  <p class="hero-sub">An open marketplace protocol for NFTs with onchain timed auctions, agent-native tooling, and protocol fee burns. For humans and agents.</p>
+  <div class="hero-actions">
+    <a href="./app.html" class="btn-primary">Launch App &rarr;</a>
+    <a href="./docs.html" class="btn-secondary">Read the Docs</a>
+    <a href="https://github.com/jperkinsx/rare-indexer" target="_blank" rel="noopener noreferrer" class="btn-secondary">GitHub</a>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="section">
+  <div class="section-label">Protocol</div>
+  <h2>Built for the next era of digital art</h2>
+  <p class="lead">Open, permissionless, and composable. Zero fees for casual users. Revenue sharing for apps that build on top.</p>
+  <div class="feature-grid">
+    <div class="feature-card">
+      <div class="feature-icon cyan">&#x23F1;</div>
+      <h3>Onchain Timed Auctions</h3>
+      <p>Reserve, scheduled, and coldie auctions — fully onchain with anti-snipe extensions. No other protocol has this.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon purple">&#x2726;</div>
+      <h3>Agent-Native</h3>
+      <p>Install the Rare Protocol skill in your AI agent. Mint, list, bid, and settle — no frontend required.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon green">&#x2194;</div>
+      <h3>Zero-Fee Default</h3>
+      <p>Call the Bazaar with no app address and pay zero protocol fees. Just gas and creator royalties.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon yellow">&#x26A1;</div>
+      <h3>$RARE Fee Burns</h3>
+      <p>Protocol revenue from app fees is used to buy and burn $RARE, creating deflationary pressure from real usage.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon cyan">&#x1F3D7;</div>
+      <h3>App Registry</h3>
+      <p>Apps self-register with their own fee in basis points. The protocol takes a revenue share. Apps earn when they drive volume.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon purple">&#x1F4E6;</div>
+      <h3>Sovereign NFTs</h3>
+      <p>Deploy your own ERC-721 collection with ERC-2981 royalties, batch minting, and full ownership. No shared contract.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Auctions -->
+<section class="section auction-section">
+  <div class="auction-layout">
+    <div>
+      <div class="section-label">Timed Auctions</div>
+      <h2>The auction primitive that Ethereum has been missing</h2>
+      <p class="lead">Fully onchain auction logic with configurable duration, minimum bids, and automatic anti-snipe extensions. No offchain orderbooks, no relays.</p>
+      <ul class="auction-features">
+        <li>Reserve auctions — auction starts when the first bid meets the minimum</li>
+        <li>Scheduled auctions — set a future start time, auction runs for a fixed duration</li>
+        <li>Anti-snipe extension — late bids extend the auction, preventing last-second sniping</li>
+        <li>Onchain settlement — winner and seller finality enforced by the contract</li>
+        <li>Revenue splitting — configure split recipients and ratios per auction</li>
+      </ul>
+    </div>
+    <div class="auction-demo">
+      <div class="auction-demo-header">SuperRareBazaar &mdash; getAuctionDetails()</div>
+      <div class="auction-demo-body">
+        <span class="label">auctionType</span>     <span class="val cyan">COLDIE_AUCTION</span><br>
+        <span class="label">creator</span>          <span class="val purple">0x335e...88b2</span><br>
+        <span class="label">minimumBid</span>       <span class="val green">0.05 ETH</span><br>
+        <span class="label">duration</span>         <span class="val">3600s</span><br>
+        <span class="label">currentBid</span>       <span class="val green">0.12 ETH</span><br>
+        <span class="label">bidder</span>           <span class="val purple">0x7a3f...c4e1</span><br>
+        <span class="label">timeRemaining</span>    <span class="val yellow">847s</span><br>
+        <span class="label">antiSnipe</span>        <span class="val cyan">enabled</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- $RARE Burn -->
+<section class="section burn-section">
+  <div class="burn-layout">
+    <div class="burn-visual">
+      <div class="burn-flow">
+        <div class="burn-step">
+          <div class="burn-step-num s1">1</div>
+          <div class="burn-step-text"><strong>Sale occurs</strong><br><span>NFT sold via Bazaar through a registered app</span></div>
+        </div>
+        <div class="burn-arrow">&darr;</div>
+        <div class="burn-step">
+          <div class="burn-step-num s2">2</div>
+          <div class="burn-step-text"><strong>App fee collected</strong><br><span>App's fee (e.g. 250 bps / 2.5%) deducted from sale</span></div>
+        </div>
+        <div class="burn-arrow">&darr;</div>
+        <div class="burn-step">
+          <div class="burn-step-num s3">3</div>
+          <div class="burn-step-text"><strong>Protocol share</strong><br><span>Protocol takes its share of the app fee (e.g. 20%)</span></div>
+        </div>
+        <div class="burn-arrow">&darr;</div>
+        <div class="burn-step">
+          <div class="burn-step-num s4">4</div>
+          <div class="burn-step-text"><strong>$RARE burned</strong><br><span>Protocol revenue used to buy $RARE on market and burn it</span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Tokenomics</div>
+      <h2>Protocol fees burn $RARE</h2>
+      <p class="lead">Every sale through a registered app generates protocol revenue. That revenue is used to buy and burn $RARE — creating real, usage-driven deflation.</p>
+      <ul class="auction-features">
+        <li>No fees for direct/casual usage — only app-mediated sales generate protocol revenue</li>
+        <li>Apps set their own fee in basis points when they register</li>
+        <li>Protocol takes a configurable share (default 20%) of each app's fee</li>
+        <li>Protocol share accumulates and is used for $RARE buyback and burn</li>
+        <li>Burn rate scales directly with marketplace volume — more usage, more deflation</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Agent Skills -->
+<section class="section agent-section">
+  <div class="agent-layout">
+    <div>
+      <div class="section-label">Agent Skills</div>
+      <h2>Your AI agent can mint, list, and auction NFTs</h2>
+      <p class="lead">Install the Rare Protocol skill to give any AI agent full marketplace capabilities. No frontend needed — agents interact directly with the contracts.</p>
+      <ul class="auction-features">
+        <li>Deploy NFT collections and mint tokens with a single instruction</li>
+        <li>List for fixed-price sale or create timed auctions</li>
+        <li>Place and manage offers, settle auctions, query onchain state</li>
+        <li>Register as a marketplace app and earn fees on volume driven</li>
+        <li>Works with any agent framework — ChatGPT, Claude, custom agents</li>
+      </ul>
+    </div>
+    <div class="code-block">
+      <div class="code-header">
+        <div class="dots"><span></span><span></span><span></span></div>
+        <span class="filename">agent-skill.md</span>
+      </div>
+      <div class="code-body">
+<span class="cm">## Agent Skill Installation</span>
+
+<span class="cm"># Add to your agent's skill config:</span>
+<span class="kw">skill</span>: <span class="str">rare-protocol</span>
+<span class="kw">version</span>: <span class="str">2.4.1</span>
+<span class="kw">network</span>: <span class="str">sepolia</span>
+
+<span class="cm">## Available Commands</span>
+<span class="fn">rare mint deploy</span> <span class="cm">--name "My Art" --symbol ART</span>
+<span class="fn">rare mint token</span>  <span class="cm">--uri ipfs://Qm... --contract 0x...</span>
+<span class="fn">rare list</span>        <span class="cm">--contract 0x... --id 1 --price 0.5</span>
+<span class="fn">rare auction create</span> <span class="cm">--contract 0x... --id 1 --min 0.1</span>
+<span class="fn">rare buy</span>         <span class="cm">--contract 0x... --id 1 --price 0.5</span>
+
+<span class="cm">## Example: Mint and list in one flow</span>
+<span class="str">"Deploy a collection called Genesis,</span>
+<span class="str"> mint token #1 with this IPFS hash,</span>
+<span class="str"> and list it for 0.5 ETH."</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section cta-section">
+  <div class="section-label">Get Started</div>
+  <h2>Start building on Rare Protocol</h2>
+  <p class="lead">Deploy a collection, mint your first NFT, and list it for sale — all from the CLI or your AI agent.</p>
+  <div class="hero-actions">
+    <a href="./app.html" class="btn-primary">Launch App &rarr;</a>
+    <a href="./docs.html" class="btn-secondary">Read the Docs</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-left">
+      <svg viewBox="0 0 32 32" width="18" height="18" fill="none" style="color:var(--text-dim)">
+        <rect x="2" y="2" width="28" height="28" rx="6" stroke="currentColor" stroke-width="2"/>
+        <path d="M9 10h6a4 4 0 0 1 0 8h-2l5 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      Rare Protocol
+    </div>
+    <div class="footer-links">
+      <a href="./app.html">App</a>
+      <a href="./docs.html">Docs</a>
+      <a href="https://github.com/jperkinsx/rare-indexer" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://www.perplexity.ai/computer" target="_blank" rel="noopener noreferrer">Created with Perplexity Computer</a>
+    </div>
+  </div>
+</footer>
+
 </body>
 </html>
